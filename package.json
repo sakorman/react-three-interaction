@@ -34,12 +34,12 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/username/react-three-interaction.git"
+		"url": "git+https://github.com/sakorman/react-three-interaction.git"
 	},
 	"bugs": {
-		"url": "https://github.com/username/react-three-interaction/issues"
+		"url": "https://github.com/sakorman/react-three-interaction/issues"
 	},
-	"homepage": "https://github.com/username/react-three-interaction#readme",
+	"homepage": "https://github.com/sakorman/react-three-interaction#readme",
 	"peerDependencies": {
 		"react": ">=16.8.0",
 		"react-dom": ">=16.8.0",
