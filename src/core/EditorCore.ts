@@ -1,0 +1,427 @@
+import * as THREE from 'three';
+import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+
+import { EditorState, EditorAction, defaultEditorState } from '../models/EditorState';
+import { SceneObject } from '../models/SceneObject';
+import { EventSystem } from './EventSystem';
+import { SceneManager } from './SceneManager';
+
+export interface EditorCoreOptions {
+  canvas?: HTMLCanvasElement;
+  enableControls?: boolean;
+  enableStats?: boolean;
+  autoResize?: boolean;
+}
+
+export class EditorCore {
+  private canvas: HTMLCanvasElement;
+  private renderer: THREE.WebGLRenderer;
+  private scene: THREE.Scene;
+  private camera: THREE.PerspectiveCamera;
+  private eventSystem: EventSystem;
+  private sceneManager: SceneManager;
+  private options: Required<EditorCoreOptions>;
+  
+  // 状态管理
+  private store: any; // Zustand store
+  private isInitialized = false;
+  private animationFrameId?: number;
+
+  // 鼠标交互
+  private mouse = new THREE.Vector2();
+  private isDragging = false;
+  private dragStartMouse = new THREE.Vector2();
+
+  constructor(canvas: HTMLCanvasElement, options: EditorCoreOptions = {}) {
+    this.canvas = canvas;
+    this.options = {
+      canvas,
+      enableControls: true,
+      enableStats: true,
+      autoResize: true,
+      ...options,
+    };
+
+    // 初始化Three.js组件
+    this.renderer = new THREE.WebGLRenderer({ 
+      canvas: this.canvas,
+      antialias: true,
+      alpha: true,
+    });
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(
+      75,
+      this.canvas.clientWidth / this.canvas.clientHeight,
+      0.1,
+      1000
+    );
+
+    // 初始化系统
+    this.eventSystem = new EventSystem();
+    this.sceneManager = new SceneManager(this.scene, this.eventSystem);
+
+    // 初始化状态管理
+    this.initializeStore();
+
+    this.initialize();
+  }
+
+  private initializeStore() {
+    this.store = create<EditorState & { dispatch: (action: EditorAction) => void }>()(
+      subscribeWithSelector((set, get) => ({
+        ...defaultEditorState,
+        dispatch: (action: EditorAction) => {
+          this.handleAction(action, set, get);
+        },
+      }))
+    );
+
+    // 监听状态变化
+    this.store.subscribe(
+      (state: EditorState) => state.selectedObjectIds,
+      (selectedObjectIds: string[]) => {
+        this.eventSystem.emit('object:select', { objectIds: selectedObjectIds });
+      }
+    );
+
+    this.store.subscribe(
+      (state: EditorState) => state.hoveredObjectId,
+      (hoveredObjectId: string | null, previousHoveredObjectId: string | null) => {
+        if (previousHoveredObjectId) {
+          this.eventSystem.emit('object:unhover', { objectId: previousHoveredObjectId });
+        }
+        if (hoveredObjectId) {
+          this.eventSystem.emit('object:hover', { objectId: hoveredObjectId });
+        }
+      }
+    );
+  }
+
+  private handleAction(
+    action: EditorAction,
+    set: any,
+    get: () => EditorState & { dispatch: (action: EditorAction) => void }
+  ) {
+    const state = get();
+    
+    switch (action.type) {
+      case 'SET_ACTIVE_TOOL':
+        const oldTool = state.activeTool;
+        set({ activeTool: action.payload });
+        this.eventSystem.emit('tool:change', { oldTool, newTool: action.payload });
+        break;
+
+      case 'SET_ENABLED':
+        set({ isEnabled: action.payload });
+        break;
+
+      case 'SELECT_OBJECTS':
+        set({ selectedObjectIds: action.payload });
+        break;
+
+      case 'ADD_SELECTION':
+        if (!state.selectedObjectIds.includes(action.payload)) {
+          set({ selectedObjectIds: [...state.selectedObjectIds, action.payload] });
+        }
+        break;
+
+      case 'REMOVE_SELECTION':
+        set({ 
+          selectedObjectIds: state.selectedObjectIds.filter(id => id !== action.payload) 
+        });
+        break;
+
+      case 'CLEAR_SELECTION':
+        set({ selectedObjectIds: [] });
+        break;
+
+      case 'SET_HOVERED_OBJECT':
+        set({ hoveredObjectId: action.payload });
+        break;
+
+      case 'ADD_SCENE_OBJECT':
+        state.sceneObjects.set(action.payload.id, action.payload);
+        set({ sceneObjects: new Map(state.sceneObjects) });
+        break;
+
+      case 'REMOVE_SCENE_OBJECT':
+        state.sceneObjects.delete(action.payload);
+        set({ 
+          sceneObjects: new Map(state.sceneObjects),
+          selectedObjectIds: state.selectedObjectIds.filter(id => id !== action.payload)
+        });
+        break;
+
+      case 'UPDATE_SCENE_OBJECT':
+        const existingObject = state.sceneObjects.get(action.payload.id);
+        if (existingObject) {
+          existingObject.updateProperties(action.payload.properties);
+          set({ sceneObjects: new Map(state.sceneObjects) });
+        }
+        break;
+
+      case 'SHOW_SELECT_MENU':
+        set({ 
+          showSelectMenu: true,
+          selectMenuPosition: action.payload 
+        });
+        break;
+
+      case 'HIDE_SELECT_MENU':
+        set({ 
+          showSelectMenu: false,
+          selectMenuPosition: null 
+        });
+        break;
+
+      case 'TOGGLE_FUNCTION_PANEL':
+        set({ showFunctionPanel: !state.showFunctionPanel });
+        break;
+
+      case 'TOGGLE_RESOURCE_MANAGER':
+        set({ showResourceManager: !state.showResourceManager });
+        break;
+
+      case 'UPDATE_CAMERA':
+        set({ camera: { ...state.camera, ...action.payload } });
+        this.eventSystem.emit('camera:change', action.payload);
+        break;
+
+      case 'UPDATE_SETTINGS':
+        set({ settings: { ...state.settings, ...action.payload } });
+        break;
+
+      case 'ADD_HISTORY_SNAPSHOT':
+        const snapshot = {
+          id: THREE.MathUtils.generateUUID(),
+          timestamp: Date.now(),
+          ...action.payload,
+        };
+        const newHistory = state.history.slice(0, state.historyIndex + 1);
+        newHistory.push(snapshot);
+        
+        // 限制历史记录数量
+        if (newHistory.length > state.maxHistorySize) {
+          newHistory.shift();
+        }
+        
+        set({ 
+          history: newHistory,
+          historyIndex: newHistory.length - 1
+        });
+        break;
+
+      case 'UNDO':
+        if (state.historyIndex > 0) {
+          const previousSnapshot = state.history[state.historyIndex - 1];
+          this.restoreSnapshot(previousSnapshot);
+          set({ historyIndex: state.historyIndex - 1 });
+        }
+        break;
+
+      case 'REDO':
+        if (state.historyIndex < state.history.length - 1) {
+          const nextSnapshot = state.history[state.historyIndex + 1];
+          this.restoreSnapshot(nextSnapshot);
+          set({ historyIndex: state.historyIndex + 1 });
+        }
+        break;
+    }
+  }
+
+  private restoreSnapshot(snapshot: any) {
+    // 这里实现历史记录恢复逻辑
+    console.log('Restoring snapshot:', snapshot);
+  }
+
+  private initialize(): void {
+    // 设置渲染器
+    this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // 设置相机
+    this.camera.position.set(5, 5, 5);
+    this.camera.lookAt(0, 0, 0);
+
+    // 添加基础灯光
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    this.scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
+    this.scene.add(directionalLight);
+
+    // 添加事件监听器
+    this.addEventListeners();
+
+    // 开始渲染循环
+    this.startRenderLoop();
+
+    this.isInitialized = true;
+  }
+
+  private addEventListeners(): void {
+    this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+    this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+    this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+    this.canvas.addEventListener('click', this.onClick.bind(this));
+    this.canvas.addEventListener('contextmenu', this.onContextMenu.bind(this));
+
+    if (this.options.autoResize) {
+      window.addEventListener('resize', this.onWindowResize.bind(this));
+    }
+  }
+
+  private onMouseDown(event: MouseEvent): void {
+    this.updateMousePosition(event);
+    this.isDragging = true;
+    this.dragStartMouse.copy(this.mouse);
+  }
+
+  private onMouseMove(event: MouseEvent): void {
+    this.updateMousePosition(event);
+    
+    if (!this.isDragging) {
+      // 处理悬停
+      const hoveredObject = this.sceneManager.getObjectAtMouse(this.mouse, this.camera);
+      this.store.getState().dispatch({
+        type: 'SET_HOVERED_OBJECT',
+        payload: hoveredObject?.id || null,
+      });
+    }
+  }
+
+  private onMouseUp(_event: MouseEvent): void {
+    this.isDragging = false;
+  }
+
+  private onClick(event: MouseEvent): void {
+    this.updateMousePosition(event);
+    
+    const clickedObject = this.sceneManager.getObjectAtMouse(this.mouse, this.camera);
+    const state = this.store.getState();
+    
+    if (clickedObject) {
+      if (event.ctrlKey || event.metaKey) {
+        // 多选模式
+        if (state.selectedObjectIds.includes(clickedObject.id)) {
+          state.dispatch({ type: 'REMOVE_SELECTION', payload: clickedObject.id });
+        } else {
+          state.dispatch({ type: 'ADD_SELECTION', payload: clickedObject.id });
+        }
+      } else {
+        // 单选模式
+        state.dispatch({ type: 'SELECT_OBJECTS', payload: [clickedObject.id] });
+      }
+    } else {
+      // 点击空白处清除选择
+      state.dispatch({ type: 'CLEAR_SELECTION' });
+    }
+  }
+
+  private onContextMenu(event: MouseEvent): void {
+    event.preventDefault();
+    this.updateMousePosition(event);
+    
+    const clickedObject = this.sceneManager.getObjectAtMouse(this.mouse, this.camera);
+    if (clickedObject) {
+      this.store.getState().dispatch({
+        type: 'SHOW_SELECT_MENU',
+        payload: { x: event.clientX, y: event.clientY },
+      });
+    }
+  }
+
+  private onWindowResize(): void {
+    const width = this.canvas.clientWidth;
+    const height = this.canvas.clientHeight;
+
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
+  }
+
+  private updateMousePosition(event: MouseEvent): void {
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  private startRenderLoop(): void {
+    const render = () => {
+      this.animationFrameId = requestAnimationFrame(render);
+      this.renderer.render(this.scene, this.camera);
+    };
+    render();
+  }
+
+  // 公共API
+  public getState() {
+    return this.store.getState();
+  }
+
+  public dispatch(action: EditorAction) {
+    this.store.getState().dispatch(action);
+  }
+
+  public subscribe(listener: (state: EditorState) => void) {
+    return this.store.subscribe(listener);
+  }
+
+  public addObject(object3D: THREE.Object3D, parentId?: string): SceneObject {
+    const sceneObject = this.sceneManager.addObject(object3D, parentId);
+    this.dispatch({ type: 'ADD_SCENE_OBJECT', payload: sceneObject });
+    return sceneObject;
+  }
+
+  public removeObject(objectId: string): boolean {
+    const success = this.sceneManager.removeObject(objectId);
+    if (success) {
+      this.dispatch({ type: 'REMOVE_SCENE_OBJECT', payload: objectId });
+    }
+    return success;
+  }
+
+  public getObject(objectId: string): SceneObject | undefined {
+    return this.sceneManager.getObject(objectId);
+  }
+
+  public getAllObjects(): SceneObject[] {
+    return this.sceneManager.getAllObjects();
+  }
+
+  public dispose(): void {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+
+    this.sceneManager.dispose();
+    this.eventSystem.dispose();
+    this.renderer.dispose();
+
+    // 移除事件监听器
+    this.canvas.removeEventListener('mousedown', this.onMouseDown.bind(this));
+    this.canvas.removeEventListener('mousemove', this.onMouseMove.bind(this));
+    this.canvas.removeEventListener('mouseup', this.onMouseUp.bind(this));
+    this.canvas.removeEventListener('click', this.onClick.bind(this));
+    this.canvas.removeEventListener('contextmenu', this.onContextMenu.bind(this));
+
+    if (this.options.autoResize) {
+      window.removeEventListener('resize', this.onWindowResize.bind(this));
+    }
+
+    this.isInitialized = false;
+  }
+
+  // Getters
+  public get rendererInstance() { return this.renderer; }
+  public get sceneInstance() { return this.scene; }
+  public get cameraInstance() { return this.camera; }
+  public get eventSystemInstance() { return this.eventSystem; }
+  public get sceneManagerInstance() { return this.sceneManager; }
+  public get isReady() { return this.isInitialized; }
+} 
