@@ -6,9 +6,10 @@ import ReactDOM from 'react-dom/client';
 import { 
   createEditor, 
   EditorProvider,
-  FunctionPanel,
+  MobxPropertyPanel,
   SelectMenu,
   ResourceManager,
+  DebugPanel,
   createBasicGeometry,
   createBasicMaterial,
   createMesh,
@@ -174,13 +175,13 @@ class ThreeJSExample {
     const root = ReactDOM.createRoot(reactContainer);
     
     const App = () => {
-      return React.createElement(EditorProvider, 
-        { editor: this.editor },
-        [
-          React.createElement(FunctionPanel, { key: 'function-panel' }),
-          React.createElement(SelectMenu, { key: 'select-menu' }),
-          React.createElement(ResourceManager, { key: 'resource-manager' })
-        ]
+      return React.createElement(
+        EditorProvider, 
+        { editor: this.editor } as any,
+        React.createElement(MobxPropertyPanel, { key: 'property-panel' } as any),
+        React.createElement(SelectMenu, { key: 'select-menu' } as any),
+        React.createElement(ResourceManager, { key: 'resource-manager' } as any),
+        React.createElement(DebugPanel, { key: 'debug-panel' } as any)
       );
     };
 
