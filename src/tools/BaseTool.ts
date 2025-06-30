@@ -14,10 +14,8 @@ export abstract class BaseTool {
     if (this.isActive) return;
     
     this.isActive = true;
-    this.editor.dispatch({ 
-      type: 'SET_ACTIVE_TOOL', 
-      payload: this.toolName as any 
-    });
+    // 注意：不在这里调用dispatch，避免循环调用
+    // 状态更新由EditorCore的setActiveTool方法负责
   }
 
   public deactivate(): void {

@@ -27,8 +27,14 @@ export * from './tools';
 export { EditorProvider, useEditor as useEditorContext } from './views/context/EditorContext';
 export { FunctionPanel } from './views/function-panel/FunctionPanel';
 export { PropertyEditor } from './views/function-panel/PropertyEditor';
+export { MobxPropertyPanel } from './views/function-panel/MobxPropertyPanel';
 export { SelectMenu } from './views/select-menu/SelectMenu';
 export { ResourceManager } from './views/resource-manager/ResourceManager';
+export { DebugPanel } from './views/debug/DebugPanel';
+
+// MobX Store
+export { EditorStore, editorStore } from './stores/EditorStore';
+export type { ModelData } from './stores/EditorStore';
 
 // Hooks
 export { useEditor } from './hooks/useEditor';

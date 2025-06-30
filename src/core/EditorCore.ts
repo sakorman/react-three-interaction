@@ -6,6 +6,9 @@ import { EditorState, EditorAction, defaultEditorState } from '../models/EditorS
 import { SceneObject } from '../models/SceneObject';
 import { EventSystem } from './EventSystem';
 import { SceneManager } from './SceneManager';
+import { SelectTool } from '../tools/select/SelectTool';
+import { BaseTool } from '../tools/BaseTool';
+import { editorStore } from '../stores/EditorStore';
 
 export interface EditorCoreOptions {
   canvas?: HTMLCanvasElement;
@@ -22,6 +25,10 @@ export class EditorCore {
   private eventSystem: EventSystem;
   private sceneManager: SceneManager;
   private options: Required<EditorCoreOptions>;
+  
+  // 工具管理
+  private tools: Map<string, BaseTool> = new Map();
+  private activeTool?: BaseTool;
   
   // 状态管理
   private store: any; // Zustand store
@@ -64,6 +71,12 @@ export class EditorCore {
     // 初始化状态管理
     this.initializeStore();
 
+    // 初始化工具
+    this.initializeTools();
+
+    // 设置MobX Store的编辑器引用
+    editorStore.setEditor(this);
+
     this.initialize();
   }
 
@@ -98,6 +111,37 @@ export class EditorCore {
     );
   }
 
+  private initializeTools(): void {
+    // 创建选择工具
+    const selectTool = new SelectTool(this);
+    this.tools.set('select', selectTool);
+    
+    // 激活默认工具
+    this.setActiveTool('select');
+  }
+
+  private setActiveTool(toolName: string): void {
+    const tool = this.tools.get(toolName);
+    if (!tool) {
+      console.warn(`Tool '${toolName}' not found`);
+      return;
+    }
+
+    // 如果已经是当前激活的工具，无需重复激活
+    if (this.activeTool === tool) {
+      return;
+    }
+
+    // 停用当前工具
+    if (this.activeTool) {
+      this.activeTool.deactivate();
+    }
+
+    // 激活新工具
+    this.activeTool = tool;
+    this.activeTool.activate();
+  }
+
   private handleAction(
     action: EditorAction,
     set: any,
@@ -108,8 +152,12 @@ export class EditorCore {
     switch (action.type) {
       case 'SET_ACTIVE_TOOL':
         const oldTool = state.activeTool;
-        set({ activeTool: action.payload });
-        this.eventSystem.emit('tool:change', { oldTool, newTool: action.payload });
+        // 避免重复设置同一个工具
+        if (oldTool !== action.payload) {
+          set({ activeTool: action.payload });
+          this.setActiveTool(action.payload);
+          this.eventSystem.emit('tool:change', { oldTool, newTool: action.payload });
+        }
         break;
 
       case 'SET_ENABLED':
@@ -306,6 +354,9 @@ export class EditorCore {
     const state = this.store.getState();
     
     if (clickedObject) {
+      // 同步到MobX Store
+      editorStore.selectModel(clickedObject.id, event.ctrlKey || event.metaKey);
+      
       if (event.ctrlKey || event.metaKey) {
         // 多选模式
         if (state.selectedObjectIds.includes(clickedObject.id)) {
@@ -319,6 +370,7 @@ export class EditorCore {
       }
     } else {
       // 点击空白处清除选择
+      editorStore.clearSelection();
       state.dispatch({ type: 'CLEAR_SELECTION' });
     }
   }
@@ -375,6 +427,10 @@ export class EditorCore {
   public addObject(object3D: THREE.Object3D, parentId?: string): SceneObject {
     const sceneObject = this.sceneManager.addObject(object3D, parentId);
     this.dispatch({ type: 'ADD_SCENE_OBJECT', payload: sceneObject });
+    
+    // 同步到MobX Store
+    editorStore.addModelFromSceneObject(sceneObject);
+    
     return sceneObject;
   }
 
@@ -382,6 +438,9 @@ export class EditorCore {
     const success = this.sceneManager.removeObject(objectId);
     if (success) {
       this.dispatch({ type: 'REMOVE_SCENE_OBJECT', payload: objectId });
+      
+      // 同步到MobX Store
+      editorStore.removeModel(objectId);
     }
     return success;
   }
@@ -398,6 +457,11 @@ export class EditorCore {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
+
+    // 清理工具
+    this.tools.forEach(tool => tool.dispose());
+    this.tools.clear();
+    this.activeTool = undefined;
 
     this.sceneManager.dispose();
     this.eventSystem.dispose();
