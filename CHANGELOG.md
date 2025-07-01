@@ -5,164 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1]
+
+### Enhanced
+- **React架构重构** - 示例项目改为React组件架构
+  - 新增`Toolbar`、`InfoPanel`、`CanvasContainer`、`App`组件
+  - 入口点重构为JSX，支持动态操作说明和状态同步
+
 ## [1.2.0]
 
 ### Added
-- **拖拽工具 (DragTool)** - 全新的3D对象拖拽功能
-  - 支持鼠标拖拽移动3D对象
-  - 自由拖拽模式（垂直于相机视线的平面）
-  - 平面约束拖拽（XY、XZ、YZ平面）
-  - 网格吸附功能，自动对齐到网格点
-  - 完整的拖拽事件系统（开始、更新、结束）
-- **拖拽事件支持** - 新增三个拖拽相关事件
-  - `object:drag:start` - 拖拽开始事件
-  - `object:drag:update` - 拖拽更新事件
-  - `object:drag:end` - 拖拽结束事件
-- **工具管理API增强**
-  - `editor.switchTool()` - 便捷的工具切换方法
-  - `editor.getActiveTool()` - 获取当前激活工具
-  - `editor.getAvailableTools()` - 获取所有可用工具列表
-  - `editor.getTool()` - 获取指定工具实例
+- **拖拽工具 (DragTool)** - 3D对象拖拽功能
+  - 支持自由拖拽和平面约束拖拽(XY/XZ/YZ)
+  - 网格吸附功能
+  - 拖拽事件系统(start/update/end)
+- **工具管理API** - 新增工具切换和管理方法
 
 ### Enhanced
-- **事件系统扩展** - 支持拖拽相关事件类型
-- **工具系统改进** - 完善的工具注册和管理机制
-- **EditorState类型更新** - 添加'drag'工具类型支持
-- **示例项目更新** - 添加拖拽工具按钮和使用说明
-
-### Features
-- ✅ 鼠标拖拽移动3D对象
-- ✅ 多种拖拽约束模式（平面约束）
-- ✅ 网格吸附和精确定位
-- ✅ 实时拖拽反馈和事件
-- ✅ 工具间无缝切换
-- ✅ 完整的API和文档
-
-### Technical Improvements
-- 完整的TypeScript类型定义
-- 继承BaseTool的标准工具架构
-- 高性能的射线检测和平面计算
-- 优化的事件监听和清理机制
+- 事件系统支持拖拽事件
+- 工具系统改进和示例项目更新
 
 ## [1.1.0]
 
 ### Added
-- **MobX状态管理系统** - 全新的响应式状态管理
-  - `EditorStore` - 使用MobX管理全局编辑器状态
-  - `ModelData` - 标准化的模型数据接口
-  - 支持场景模型、选中状态、实时属性同步
-- **响应式属性面板** - `MobxPropertyPanel`
-  - 实时响应选中模型变化
-  - 支持位置、旋转、缩放属性编辑
-  - 支持颜色和材质属性调整
-  - 美观的Material Design风格界面
-- **调试面板** - `DebugPanel`
-  - 实时显示MobX Store状态
-  - 模型数量和选中状态统计
-  - 开发调试信息展示
-- **几何体工具栏**
-  - 支持添加立方体、球体、圆柱体
-  - 一键创建3D几何体对象
-  - 自动添加到场景和状态管理
+- **MobX状态管理** - 响应式状态管理系统
+  - `EditorStore`全局状态管理
+  - `MobxPropertyPanel`属性面板
+  - `DebugPanel`调试面板
+- **几何体工具栏** - 支持添加立方体、球体、圆柱体
 
 ### Enhanced
-- **EditorCore核心优化**
-  - 完整的工具管理系统重构
-  - 自动初始化SelectTool实例
-  - 改进的工具切换与状态同步机制
-  - 与MobX Store双向数据绑定
-- **选择工具改进**
-  - 修复左键点击无法选中对象的问题
-  - 优化工具激活逻辑，避免循环调用
-  - 改进的选择状态管理
-- **React集成优化**
-  - 修复React Hook调用错误
-  - Webpack配置添加React resolve alias
-  - 改进React.createElement用法
-  - 更好的组件渲染性能
+- EditorCore核心重构和工具管理优化
+- 选择工具改进，修复点击选择问题
+- React集成优化
 
 ### Fixed
-- 修复左键点击选择功能失效问题
-- 修复BaseTool激活时的递归循环调用
-- 修复React Hook "Invalid hook call" 错误
-- 修复多React实例冲突问题
-- 修复属性面板不响应选中状态变化
-- 清理所有调试日志，保持代码整洁
-
-### Dependencies
-- 添加 `mobx@^6.12.0` - 响应式状态管理
-- 添加 `mobx-react-lite@^4.0.5` - React MobX集成
-- 更新 `styled-components@^6.1.6` - 样式组件
-- 更新 `zustand@^4.4.7` - 状态管理
-
-### Technical Improvements
-- 完整的TypeScript类型定义
-- 改进的模块导出结构
-- 优化的webpack构建配置
-- 更好的代码组织和架构
+- 修复选择功能和React Hook错误
+- 修复工具激活循环调用问题
 
 ## [1.0.1]
 
 ### Added
-- `SelectMenu` - 右键选择菜单组件
-  - 支持复制、重复、删除对象
-  - 显示/隐藏对象功能
-  - 聚焦到对象和重置变换
-  - 美观的现代化界面设计
-- `ResourceManager` - 资源管理器组件
-  - 显示场景中所有对象的层次结构
-  - 搜索和过滤功能（全部/可见/隐藏）
-  - 点击选择对象，支持多选
-  - 快速切换对象可见性
-  - 实时统计信息显示
+- **SelectMenu** - 右键菜单组件(复制/删除/显隐对象)
+- **ResourceManager** - 资源管理器组件(对象层次/搜索/选择)
 
 ### Enhanced
-- 更新了 `EditorCore` 的getter方法命名，避免属性名冲突
-- 示例项目集成了新的UI组件
-- 完善了组件导出和类型定义
+- 优化EditorCore方法命名和组件集成
 
 ## [1.0.0]
+
 ### Added
-- 初始版本发布
-- 核心编辑器功能 (`EditorCore`)
-- 事件系统 (`EventSystem`)
-- 场景管理器 (`SceneManager`)
-- 选择工具 (`SelectTool`)
-- React集成组件
-  - `EditorProvider` - 编辑器上下文提供者
-  - `FunctionPanel` - 功能面板组件
-  - `PropertyEditor` - 属性编辑器组件
-- 自定义Hooks
-  - `useEditor` - 编辑器状态管理
-  - `useSelection` - 选择状态管理
-- Three.js工具函数库
-- 完整的TypeScript支持
-- ESLint代码规范
-- Webpack构建配置
-- Husky Git钩子
-- 示例项目
+- **核心编辑器功能** - EditorCore、EventSystem、SceneManager
+- **选择工具** - 3D对象选择和多选功能
+- **React组件** - EditorProvider、FunctionPanel、PropertyEditor
+- **Hooks** - useEditor、useSelection状态管理
+- **开发工具** - TypeScript、ESLint、Webpack配置
 
 ### Features
-- ✅ 3D对象选择和多选
-- ✅ 鼠标悬停高亮
-- ✅ 对象属性编辑
-- ✅ 实时参数调整
-- ✅ 场景对象管理
-- ✅ 事件系统
-- ✅ 状态管理 (Zustand)
-- ✅ React组件集成
-- ✅ TypeScript完全支持
-- ✅ 可扩展的工具系统
-
-### Documentation
-- 完整的API文档
-- 使用示例
-- 开发指南
-- 配置说明
-
-### Development
-- 专业的项目结构
-- 现代化的构建工具链
-- 代码质量保证
-- 自动化测试准备
-- 持续集成准备 
+- 3D对象选择、悬停高亮、属性编辑
+- 事件系统和状态管理
+- 完整TypeScript支持 
