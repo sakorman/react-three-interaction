@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 
-import { EditorState, EditorAction, defaultEditorState } from '../models/EditorState';
+import { EditorState, EditorAction, EditorTool, defaultEditorState } from '../models/EditorState';
 import { SceneObject } from '../models/SceneObject';
 import { EventSystem } from './EventSystem';
 import { SceneManager } from './SceneManager';
 import { SelectTool } from '../tools/select/SelectTool';
+import { DragTool } from '../tools/drag/DragTool';
 import { BaseTool } from '../tools/BaseTool';
 import { editorStore } from '../stores/EditorStore';
 
@@ -115,6 +116,10 @@ export class EditorCore {
     // 创建选择工具
     const selectTool = new SelectTool(this);
     this.tools.set('select', selectTool);
+    
+    // 创建拖拽工具
+    const dragTool = new DragTool(this);
+    this.tools.set('drag', dragTool);
     
     // 激活默认工具
     this.setActiveTool('select');
@@ -451,6 +456,34 @@ export class EditorCore {
 
   public getAllObjects(): SceneObject[] {
     return this.sceneManager.getAllObjects();
+  }
+
+  // 工具管理API
+  public getActiveTool(): BaseTool | undefined {
+    return this.activeTool;
+  }
+
+  public getActiveToolName(): string | undefined {
+    return this.activeTool?.name;
+  }
+
+  public switchTool(toolName: string): boolean {
+    const tool = this.tools.get(toolName);
+    if (!tool) {
+      console.warn(`工具 '${toolName}' 不存在`);
+      return false;
+    }
+    
+    this.dispatch({ type: 'SET_ACTIVE_TOOL', payload: toolName as EditorTool });
+    return true;
+  }
+
+  public getTool(toolName: string): BaseTool | undefined {
+    return this.tools.get(toolName);
+  }
+
+  public getAvailableTools(): string[] {
+    return Array.from(this.tools.keys());
   }
 
   public dispose(): void {

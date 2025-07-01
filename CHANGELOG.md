@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0]
+
+### Added
+- **拖拽工具 (DragTool)** - 全新的3D对象拖拽功能
+  - 支持鼠标拖拽移动3D对象
+  - 自由拖拽模式（垂直于相机视线的平面）
+  - 平面约束拖拽（XY、XZ、YZ平面）
+  - 网格吸附功能，自动对齐到网格点
+  - 完整的拖拽事件系统（开始、更新、结束）
+- **拖拽事件支持** - 新增三个拖拽相关事件
+  - `object:drag:start` - 拖拽开始事件
+  - `object:drag:update` - 拖拽更新事件
+  - `object:drag:end` - 拖拽结束事件
+- **工具管理API增强**
+  - `editor.switchTool()` - 便捷的工具切换方法
+  - `editor.getActiveTool()` - 获取当前激活工具
+  - `editor.getAvailableTools()` - 获取所有可用工具列表
+  - `editor.getTool()` - 获取指定工具实例
+
+### Enhanced
+- **事件系统扩展** - 支持拖拽相关事件类型
+- **工具系统改进** - 完善的工具注册和管理机制
+- **EditorState类型更新** - 添加'drag'工具类型支持
+- **示例项目更新** - 添加拖拽工具按钮和使用说明
+
+### Features
+- ✅ 鼠标拖拽移动3D对象
+- ✅ 多种拖拽约束模式（平面约束）
+- ✅ 网格吸附和精确定位
+- ✅ 实时拖拽反馈和事件
+- ✅ 工具间无缝切换
+- ✅ 完整的API和文档
+
+### Technical Improvements
+- 完整的TypeScript类型定义
+- 继承BaseTool的标准工具架构
+- 高性能的射线检测和平面计算
+- 优化的事件监听和清理机制
+
 ## [1.1.0]
 
 ### Added

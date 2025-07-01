@@ -59,6 +59,7 @@ class ThreeJSExample {
 
   private bindEvents() {
     const btnSelect = document.getElementById('btn-select') as HTMLButtonElement;
+    const btnDrag = document.getElementById('btn-drag') as HTMLButtonElement;
     const btnAddCube = document.getElementById('btn-add-cube') as HTMLButtonElement;
     const btnAddSphere = document.getElementById('btn-add-sphere') as HTMLButtonElement;
     const btnAddCylinder = document.getElementById('btn-add-cylinder') as HTMLButtonElement;
@@ -68,7 +69,12 @@ class ThreeJSExample {
 
     btnSelect?.addEventListener('click', () => {
       this.setActiveButton(btnSelect);
-      this.editor.dispatch({ type: 'SET_ACTIVE_TOOL', payload: 'select' });
+      this.editor.switchTool('select');
+    });
+
+    btnDrag?.addEventListener('click', () => {
+      this.setActiveButton(btnDrag);
+      this.editor.switchTool('drag');
     });
 
     btnAddCube?.addEventListener('click', () => {

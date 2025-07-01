@@ -6,6 +6,9 @@ export type EventType =
   | 'object:transform'
   | 'object:add'
   | 'object:remove'
+  | 'object:drag:start'
+  | 'object:drag:update'
+  | 'object:drag:end'
   | 'tool:change'
   | 'camera:change'
   | 'scene:update';
@@ -18,6 +21,9 @@ export interface EventData {
   'object:transform': { objectId: string; transform: any };
   'object:add': { objectId: string };
   'object:remove': { objectId: string };
+  'object:drag:start': { objectId: string; startPosition: any };
+  'object:drag:update': { objectId: string; position: any; delta: any };
+  'object:drag:end': { objectId: string; startPosition: any; endPosition: any; delta: any };
   'tool:change': { oldTool: string; newTool: string };
   'camera:change': { position?: number[]; target?: number[]; zoom?: number };
   'scene:update': { timestamp: number };

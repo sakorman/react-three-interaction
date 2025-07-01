@@ -1,6 +1,6 @@
 import { SceneObject } from './SceneObject';
 
-export type EditorTool = 'select' | 'move' | 'rotate' | 'scale' | 'add' | 'delete';
+export type EditorTool = 'select' | 'drag' | 'move' | 'rotate' | 'scale' | 'add' | 'delete';
 
 export interface EditorCamera {
   position: [number, number, number];
