@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2]
+
+### Fixed
+- **UI & State Sync:** 修复了属性面板、资源管理器和SelectMenu不显示的问题，统一了MobX和Zustand的状态管理，避免了状态不同步。
+- **Build & TS:** 解决了TypeScript `rootDir`路径冲突导致的编译报错问题。
+
+### Enhanced
+- **UX:** 优化了资源管理器的位置，调整到左下角，并移除了所有调试信息，使代码更适合生产环境。
+
 ## [1.2.1]
 
 ### Enhanced
