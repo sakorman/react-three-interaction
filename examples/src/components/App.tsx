@@ -6,16 +6,17 @@ import {
   EditorProvider,
   MobxPropertyPanel,
   SelectMenu,
-  ResourceManager,
+  MobxResourceManager,
   DebugPanel,
   createBasicGeometry,
   createBasicMaterial,
   createMesh,
-} from '../../../src';
-
+  editorStore,
+} from '@/index';
+import { CanvasContainer } from './CanvasContainer';
 import { Toolbar } from './Toolbar';
 import { InfoPanel } from './InfoPanel';
-import { CanvasContainer } from './CanvasContainer';
+
 
 export const App: React.FC = () => {
   const [activeTool, setActiveTool] = useState<string>('select');
@@ -24,7 +25,7 @@ export const App: React.FC = () => {
 
   const handleCanvasReady = useCallback((canvas: HTMLCanvasElement) => {
     // 创建编辑器
-    const editor = createEditor({
+    const editor = createEditor({ 
       canvas,
       enableControls: true,
       enableStats: true,
@@ -38,6 +39,9 @@ export const App: React.FC = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
+
+    // 将控制器设置到编辑器中进行管理
+    editor.setCameraControls(controls);
 
     // 启动渲染循环
     const animate = () => {
@@ -75,6 +79,8 @@ export const App: React.FC = () => {
     setActiveTool(tool);
     if (editorRef.current) {
       editorRef.current.switchTool(tool);
+      // 同步 MobX store 的激活工具状态
+      editorStore.setActiveTool(tool);
     }
   }, []);
 
@@ -131,12 +137,12 @@ export const App: React.FC = () => {
 
   const handleToggleResourceManager = useCallback(() => {
     if (!editorRef.current) return;
-    editorRef.current.dispatch({ type: 'TOGGLE_RESOURCE_MANAGER' });
+    editorStore.toggleResourceManager();
   }, []);
 
   const handleToggleFunctionPanel = useCallback(() => {
     if (!editorRef.current) return;
-    editorRef.current.dispatch({ type: 'TOGGLE_FUNCTION_PANEL' });
+    editorStore.togglePropertyPanel();
   }, []);
 
   return (
@@ -160,7 +166,7 @@ export const App: React.FC = () => {
         <EditorProvider editor={editorRef.current}>
           <MobxPropertyPanel />
           <SelectMenu />
-          <ResourceManager />
+          <MobxResourceManager />
           <DebugPanel />
         </EditorProvider>
       )}
