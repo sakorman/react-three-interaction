@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { EditorCore } from '../../core/EditorCore';
 import { BaseTool } from '../BaseTool';
+import { editorStore } from '../../stores/EditorStore';
 
 export interface DragToolOptions {
   enableSnapping?: boolean;
@@ -45,7 +46,6 @@ export class DragTool extends BaseTool {
 
   public activate(): void {
     super.activate();
-    console.log('拖拽工具已激活');
     this.addEventListeners();
   }
 
@@ -53,6 +53,9 @@ export class DragTool extends BaseTool {
     super.deactivate();
     this.removeEventListeners();
     this.stopDragging();
+    
+    // 确保相机控制器被重新启用
+    this.editor.enableCameraControls();
   }
 
   private addEventListeners(): void {
@@ -75,6 +78,9 @@ export class DragTool extends BaseTool {
     // 检测鼠标下的对象
     const intersectedObject = this.getIntersectedObject();
     if (intersectedObject) {
+      // 阻止事件冒泡，防止相机控制器接收到鼠标事件
+      event.preventDefault();
+      event.stopPropagation();
       this.startDragging(intersectedObject);
     }
   }
@@ -83,12 +89,18 @@ export class DragTool extends BaseTool {
     this.updateMousePosition(event);
     
     if (this.isDragging && this.dragTargetId) {
+      // 阻止事件冒泡，防止相机控制器接收到鼠标事件
+      event.preventDefault();
+      event.stopPropagation();
       this.updateDragPosition();
     }
   }
 
-  private onMouseUp(_event: MouseEvent): void {
+  private onMouseUp(event: MouseEvent): void {
     if (this.isDragging) {
+      // 阻止事件冒泡，防止相机控制器接收到鼠标事件
+      event.preventDefault();
+      event.stopPropagation();
       this.stopDragging();
     }
   }
@@ -129,6 +141,9 @@ export class DragTool extends BaseTool {
     this.isDragging = true;
     this.dragTargetId = objectId;
     
+    // 禁用相机控制器，防止拖拽时视角跟着变化
+    this.editor.disableCameraControls();
+    
     // 记录拖拽开始位置
     this.dragStartPosition.copy(sceneObject.object3D.position);
     
@@ -138,16 +153,17 @@ export class DragTool extends BaseTool {
     // 计算鼠标到对象的偏移
     this.calculateDragOffset();
     
-    // 选中被拖拽的对象
+    // 选中被拖拽的对象（同步到两个store）
     this.editor.dispatch({ type: 'SELECT_OBJECTS', payload: [objectId] });
+    // 同步到MobX Store
+    editorStore.clearSelection();
+    editorStore.selectModel(objectId, false);
     
     // 触发拖拽开始事件
     this.editor.eventSystemInstance.emit('object:drag:start', {
       objectId,
       startPosition: this.dragStartPosition.clone()
     });
-    
-    console.log(`开始拖拽对象: ${objectId}`);
   }
 
   private createDragPlane(position: THREE.Vector3): void {
@@ -250,28 +266,29 @@ export class DragTool extends BaseTool {
       });
     }
     
-    console.log(`拖拽结束: ${this.dragTargetId}`);
-    
     this.isDragging = false;
     this.dragTargetId = null;
     this.dragPlane = undefined;
+    
+    // 重新启用相机控制器
+    this.editor.enableCameraControls();
   }
 
-  private onDragStart({ objectId, startPosition }: { objectId: string; startPosition: THREE.Vector3 }): void {
-    console.log(`对象 ${objectId} 开始拖拽，起始位置:`, startPosition);
+  private onDragStart({ objectId: _objectId, startPosition: _startPosition }: { objectId: string; startPosition: THREE.Vector3 }): void {
+    // 拖拽开始回调
   }
 
   private onDragUpdate({ objectId: _objectId, position: _position, delta: _delta }: { objectId: string; position: THREE.Vector3; delta: THREE.Vector3 }): void {
     // 可以在这里添加拖拽过程中的额外逻辑
   }
 
-  private onDragEnd({ objectId, startPosition: _startPosition, endPosition: _endPosition, delta }: { 
+  private onDragEnd({ objectId: _objectId, startPosition: _startPosition, endPosition: _endPosition, delta: _delta }: { 
     objectId: string; 
     startPosition: THREE.Vector3; 
     endPosition: THREE.Vector3; 
     delta: THREE.Vector3; 
   }): void {
-    console.log(`对象 ${objectId} 拖拽完成，移动距离:`, delta);
+    // 拖拽结束回调
   }
 
   // 公共API

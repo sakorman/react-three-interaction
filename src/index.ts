@@ -30,6 +30,7 @@ export { PropertyEditor } from './views/function-panel/PropertyEditor';
 export { MobxPropertyPanel } from './views/function-panel/MobxPropertyPanel';
 export { SelectMenu } from './views/select-menu/SelectMenu';
 export { ResourceManager } from './views/resource-manager/ResourceManager';
+export { MobxResourceManager } from './views/resource-manager';
 export { DebugPanel } from './views/debug/DebugPanel';
 
 // MobX Store

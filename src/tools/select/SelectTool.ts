@@ -11,7 +11,8 @@ export interface SelectToolOptions {
 
 export class SelectTool extends BaseTool {
   private options: Required<SelectToolOptions>;
-  private highlightMaterial?: THREE.Material;
+  private selectHighlightMaterial: THREE.Material;
+  private hoverHighlightMaterial: THREE.Material;
   private originalMaterials: Map<string, THREE.Material | THREE.Material[]> = new Map();
 
   constructor(editor: EditorCore, options: SelectToolOptions = {}) {
@@ -24,18 +25,25 @@ export class SelectTool extends BaseTool {
       ...options,
     };
 
-    this.initialize();
-  }
-
-  private initialize(): void {
-    // 创建高亮材质
-    this.highlightMaterial = new THREE.MeshBasicMaterial({
+    // 创建可重用的高亮材质
+    this.selectHighlightMaterial = new THREE.MeshBasicMaterial({
       color: this.options.highlightColor,
+      transparent: true,
+      opacity: 0.5,
+      depthTest: false,
+    });
+
+    this.hoverHighlightMaterial = new THREE.MeshBasicMaterial({
+      color: 0x0088ff,
       transparent: true,
       opacity: 0.3,
       depthTest: false,
     });
 
+    this.initialize();
+  }
+
+  private initialize(): void {
     // 监听编辑器事件
     this.editor.eventSystemInstance.on('object:select', this.onObjectSelect.bind(this));
     this.editor.eventSystemInstance.on('object:deselect', this.onObjectDeselect.bind(this));
@@ -45,19 +53,18 @@ export class SelectTool extends BaseTool {
 
   public activate(): void {
     super.activate();
-    console.log('选择工具已激活');
   }
 
   public deactivate(): void {
     super.deactivate();
-    this.clearHighlights();
+    this.clearAllHighlights();
   }
 
   private onObjectSelect({ objectIds }: { objectIds: string[] }): void {
-    // 清除之前的选择高亮
-    this.clearSelectionHighlights();
+    // 清除所有现有的选择高亮
+    this.clearAllHighlights();
     
-    // 为选中的对象添加高亮
+    // 为当前选中的对象添加高亮
     objectIds.forEach(objectId => {
       this.highlightObject(objectId, 'select');
     });
@@ -71,7 +78,11 @@ export class SelectTool extends BaseTool {
 
   private onObjectHover({ objectId }: { objectId: string }): void {
     if (!this.options.selectOnHover) {
-      this.highlightObject(objectId, 'hover');
+      const state = this.editor.getState();
+      // 只有在对象未被选中时才添加悬停高亮
+      if (!state.selectedObjectIds.includes(objectId)) {
+        this.highlightObject(objectId, 'hover');
+      }
     }
   }
 
@@ -97,14 +108,7 @@ export class SelectTool extends BaseTool {
     }
 
     // 应用高亮材质
-    const highlightColor = type === 'select' ? this.options.highlightColor : 0x0088ff;
-    const highlightMaterial = new THREE.MeshBasicMaterial({
-      color: highlightColor,
-      transparent: true,
-      opacity: type === 'select' ? 0.5 : 0.3,
-      depthTest: false,
-    });
-
+    const highlightMaterial = type === 'select' ? this.selectHighlightMaterial : this.hoverHighlightMaterial;
     mesh.material = highlightMaterial;
   }
 
@@ -121,18 +125,25 @@ export class SelectTool extends BaseTool {
     }
   }
 
-  private clearSelectionHighlights(): void {
-    const state = this.editor.getState();
-    state.selectedObjectIds.forEach((objectId: string) => {
-      this.removeHighlight(objectId);
-    });
-  }
-
-  private clearHighlights(): void {
-    this.originalMaterials.forEach((_: THREE.Material | THREE.Material[], objectId: string) => {
-      this.removeHighlight(objectId);
+  private clearAllHighlights(): void {
+    // 清除所有高亮并恢复原始材质
+    this.originalMaterials.forEach((originalMaterial, objectId) => {
+      const sceneObject = this.editor.getObject(objectId);
+      if (sceneObject && sceneObject.object3D instanceof THREE.Mesh) {
+        sceneObject.object3D.material = originalMaterial;
+      }
     });
     this.originalMaterials.clear();
+  }
+
+  private clearAllSelectionHighlights(): void {
+    // 这个方法现在使用 clearAllHighlights
+    this.clearAllHighlights();
+  }
+
+  private clearSelectionHighlights(): void {
+    // 这个方法现在已弃用，使用 clearAllHighlights 代替
+    this.clearAllHighlights();
   }
 
   public selectObject(objectId: string, addToSelection = false): void {
@@ -175,8 +186,9 @@ export class SelectTool extends BaseTool {
   }
 
   public dispose(): void {
-    this.clearHighlights();
-    this.highlightMaterial?.dispose();
+    this.clearAllHighlights();
+    this.selectHighlightMaterial?.dispose();
+    this.hoverHighlightMaterial?.dispose();
     super.dispose();
   }
 } 

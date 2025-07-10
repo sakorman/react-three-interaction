@@ -1,1 +1,2 @@
-export { ResourceManager } from './ResourceManager'; 
+export { ResourceManager } from './ResourceManager';
+export { MobxResourceManager } from './MobxResourceManager'; 

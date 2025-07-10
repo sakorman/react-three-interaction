@@ -2,10 +2,8 @@ import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { observer } from 'mobx-react-lite';
 
-import { useEditor } from '../../hooks/useEditor';
-import { useSelection } from '../../hooks/useSelection';
-import { SceneObject } from '../../models/SceneObject';
 import { editorStore } from '../../stores/EditorStore';
+import { ModelData } from '../../stores/EditorStore';
 
 const ManagerContainer = styled.div`
   position: fixed;
@@ -162,9 +160,7 @@ const Stats = styled.div`
   color: #ccc;
 `;
 
-export const ResourceManager: React.FC = observer(() => {
-  const { state, dispatch } = useEditor();
-  const { selectedObjectIds, selectObject, isSelected } = useSelection();
+export const MobxResourceManager: React.FC = observer(() => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
 
@@ -172,65 +168,58 @@ export const ResourceManager: React.FC = observer(() => {
     editorStore.toggleResourceManager();
   };
 
-  // 获取所有对象并转换为数组
-  const allObjects = useMemo(() => {
-    return Array.from(state.sceneObjects.values());
-  }, [state.sceneObjects]);
+  // 获取所有模型
+  const allModels = useMemo(() => {
+    return editorStore.modelList;
+  }, [editorStore.modelList]);
 
-  // 过滤对象
-  const filteredObjects = useMemo(() => {
-    return allObjects.filter(obj => {
+  // 过滤模型
+  const filteredModels = useMemo(() => {
+    return allModels.filter(model => {
       // 搜索过滤
-      if (searchTerm && !obj.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      if (searchTerm && !model.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
       
       // 可见性过滤
-      if (filter === 'visible' && !obj.visible) return false;
-      if (filter === 'hidden' && obj.visible) return false;
+      if (filter === 'visible' && !model.visible) return false;
+      if (filter === 'hidden' && model.visible) return false;
       
       return true;
     });
-  }, [allObjects, searchTerm, filter]);
+  }, [allModels, searchTerm, filter]);
 
-  const handleObjectClick = (object: SceneObject, event: React.MouseEvent) => {
+  const handleModelClick = (model: ModelData, event: React.MouseEvent) => {
     if (event.ctrlKey || event.metaKey) {
       // 多选模式
-      if (isSelected(object.id)) {
-        dispatch({ type: 'REMOVE_SELECTION', payload: object.id });
-      } else {
-        dispatch({ type: 'ADD_SELECTION', payload: object.id });
-      }
+      editorStore.selectModel(model.id, true);
     } else {
       // 单选模式
-      selectObject(object.id);
+      editorStore.selectModel(model.id, false);
     }
   };
 
-  const handleToggleVisibility = (object: SceneObject, event: React.MouseEvent) => {
+  const handleToggleVisibility = (model: ModelData, event: React.MouseEvent) => {
     event.stopPropagation();
-    dispatch({
-      type: 'UPDATE_SCENE_OBJECT',
-      payload: { id: object.id, properties: { visible: !object.visible } }
-    });
+    editorStore.updateModel(model.id, { visible: !model.visible });
   };
 
-  const getObjectIcon = (type: string) => {
+  const getModelIcon = (type: string) => {
     switch (type) {
+      case 'cube': return '🟦';
+      case 'sphere': return '🔴';
+      case 'cylinder': return '🥫';
+      case 'plane': return '🟫';
       case 'mesh': return '📦';
-      case 'group': return '📁';
-      case 'light': return '💡';
-      case 'camera': return '📷';
-      case 'helper': return '🔧';
       default: return '❓';
     }
   };
 
   const stats = {
-    total: allObjects.length,
-    visible: allObjects.filter(obj => obj.visible).length,
-    hidden: allObjects.filter(obj => !obj.visible).length,
-    selected: selectedObjectIds.length,
+    total: allModels.length,
+    visible: allModels.filter(model => model.visible).length,
+    hidden: allModels.filter(model => !model.visible).length,
+    selected: editorStore.selectionCount,
   };
 
   if (!editorStore.showResourceManager) {
@@ -274,38 +263,38 @@ export const ResourceManager: React.FC = observer(() => {
       <div style={{ padding: '8px 12px' }}>
         <SearchInput
           type="text"
-          placeholder="搜索对象..."
+          placeholder="搜索模型..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
       <ObjectList>
-        {filteredObjects.length === 0 ? (
+        {filteredModels.length === 0 ? (
           <div style={{ 
             padding: '20px', 
             textAlign: 'center', 
             color: '#888',
             fontSize: '12px' 
           }}>
-            {searchTerm ? '没有找到匹配的对象' : '场景中没有对象'}
+            {searchTerm ? '没有找到匹配的模型' : '场景中没有模型'}
           </div>
         ) : (
-          filteredObjects.map(object => (
+          filteredModels.map(model => (
             <ObjectItem
-              key={object.id}
-              isSelected={isSelected(object.id)}
-              isHidden={!object.visible}
-              onClick={(e) => handleObjectClick(object, e)}
+              key={model.id}
+              isSelected={editorStore.selectedModelIds.includes(model.id)}
+              isHidden={!model.visible}
+              onClick={(e) => handleModelClick(model, e)}
             >
-              <ObjectIcon>{getObjectIcon(object.type)}</ObjectIcon>
-              <ObjectName>{object.name}</ObjectName>
-              <ObjectType>{object.type}</ObjectType>
+              <ObjectIcon>{getModelIcon(model.type)}</ObjectIcon>
+              <ObjectName>{model.name}</ObjectName>
+              <ObjectType>{model.type}</ObjectType>
               <VisibilityButton
-                onClick={(e) => handleToggleVisibility(object, e)}
-                title={object.visible ? '隐藏' : '显示'}
+                onClick={(e) => handleToggleVisibility(model, e)}
+                title={model.visible ? '隐藏' : '显示'}
               >
-                {object.visible ? '👁️' : '🙈'}
+                {model.visible ? '👁️' : '🙈'}
               </VisibilityButton>
             </ObjectItem>
           ))

@@ -41,6 +41,9 @@ export class EditorCore {
   private isDragging = false;
   private dragStartMouse = new THREE.Vector2();
 
+  // 相机控制器管理
+  private cameraControls: any = null; // 用于存储 OrbitControls 或其他控制器
+
   constructor(canvas: HTMLCanvasElement, options: EditorCoreOptions = {}) {
     this.canvas = canvas;
     this.options = {
@@ -94,8 +97,22 @@ export class EditorCore {
     // 监听状态变化
     this.store.subscribe(
       (state: EditorState) => state.selectedObjectIds,
-      (selectedObjectIds: string[]) => {
-        this.eventSystem.emit('object:select', { objectIds: selectedObjectIds });
+      (selectedObjectIds: string[], previousSelectedObjectIds: string[]) => {
+        // 找出被取消选中的对象
+        const deselected = previousSelectedObjectIds.filter(id => !selectedObjectIds.includes(id));
+        
+        // 触发取消选中事件
+        if (deselected.length > 0) {
+          this.eventSystem.emit('object:deselect', { objectIds: deselected });
+        }
+        
+        // 触发选中事件
+        if (selectedObjectIds.length > 0) {
+          this.eventSystem.emit('object:select', { objectIds: selectedObjectIds });
+        }
+        
+        // 同步到 MobX Store
+        editorStore.setSelectedModelIds(selectedObjectIds);
       }
     );
 
@@ -108,6 +125,9 @@ export class EditorCore {
         if (hoveredObjectId) {
           this.eventSystem.emit('object:hover', { objectId: hoveredObjectId });
         }
+        
+        // 同步到 MobX Store
+        editorStore.setHoveredModel(hoveredObjectId);
       }
     );
   }
@@ -123,6 +143,9 @@ export class EditorCore {
     
     // 激活默认工具
     this.setActiveTool('select');
+    
+    // 同步到 MobX Store
+    editorStore.setActiveTool('select');
   }
 
   private setActiveTool(toolName: string): void {
@@ -162,6 +185,9 @@ export class EditorCore {
           set({ activeTool: action.payload });
           this.setActiveTool(action.payload);
           this.eventSystem.emit('tool:change', { oldTool, newTool: action.payload });
+          
+          // 同步到 MobX Store
+          editorStore.setActiveTool(action.payload);
         }
         break;
 
@@ -234,6 +260,9 @@ export class EditorCore {
 
       case 'TOGGLE_RESOURCE_MANAGER':
         set({ showResourceManager: !state.showResourceManager });
+        
+        // 同步到 MobX Store
+        editorStore.toggleResourceManager();
         break;
 
       case 'UPDATE_CAMERA':
@@ -283,9 +312,8 @@ export class EditorCore {
     }
   }
 
-  private restoreSnapshot(snapshot: any) {
+  private restoreSnapshot(_snapshot: any) {
     // 这里实现历史记录恢复逻辑
-    console.log('Restoring snapshot:', snapshot);
   }
 
   private initialize(): void {
@@ -359,24 +387,36 @@ export class EditorCore {
     const state = this.store.getState();
     
     if (clickedObject) {
-      // 同步到MobX Store
-      editorStore.selectModel(clickedObject.id, event.ctrlKey || event.metaKey);
+      const isMultiSelect = event.ctrlKey || event.metaKey;
+      const isAlreadySelected = state.selectedObjectIds.includes(clickedObject.id);
       
-      if (event.ctrlKey || event.metaKey) {
-        // 多选模式
-        if (state.selectedObjectIds.includes(clickedObject.id)) {
+      if (isMultiSelect) {
+        // 多选模式：Ctrl/Cmd + 点击
+        if (isAlreadySelected) {
+          // 如果已选中，则取消选中该对象
           state.dispatch({ type: 'REMOVE_SELECTION', payload: clickedObject.id });
+          editorStore.deselectModel(clickedObject.id);
         } else {
+          // 如果未选中，则添加到选择
           state.dispatch({ type: 'ADD_SELECTION', payload: clickedObject.id });
+          editorStore.selectModel(clickedObject.id, true);
         }
       } else {
-        // 单选模式
-        state.dispatch({ type: 'SELECT_OBJECTS', payload: [clickedObject.id] });
+        // 单选模式：普通点击
+        if (isAlreadySelected && state.selectedObjectIds.length === 1) {
+          // 如果只选中了这一个对象，点击时保持选中状态，不做任何操作
+          return;
+        } else {
+          // 清除之前的选择，只选中当前对象
+          state.dispatch({ type: 'SELECT_OBJECTS', payload: [clickedObject.id] });
+          editorStore.clearSelection();
+          editorStore.selectModel(clickedObject.id, false);
+        }
       }
     } else {
-      // 点击空白处清除选择
-      editorStore.clearSelection();
+      // 点击空白处清除所有选择
       state.dispatch({ type: 'CLEAR_SELECTION' });
+      editorStore.clearSelection();
     }
   }
 
@@ -484,6 +524,27 @@ export class EditorCore {
 
   public getAvailableTools(): string[] {
     return Array.from(this.tools.keys());
+  }
+
+  // 相机控制器管理API
+  public setCameraControls(controls: any): void {
+    this.cameraControls = controls;
+  }
+
+  public getCameraControls(): any {
+    return this.cameraControls;
+  }
+
+  public enableCameraControls(): void {
+    if (this.cameraControls && this.cameraControls.enabled !== undefined) {
+      this.cameraControls.enabled = true;
+    }
+  }
+
+  public disableCameraControls(): void {
+    if (this.cameraControls && this.cameraControls.enabled !== undefined) {
+      this.cameraControls.enabled = false;
+    }
   }
 
   public dispose(): void {

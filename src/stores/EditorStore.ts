@@ -99,7 +99,9 @@ export class EditorStore {
       };
     }
 
-    const modelData: Partial<ModelData> = {
+    // 使用 sceneObject 的 ID，确保与选择系统一致
+    const model: ModelData = {
+      id: sceneObject.id,
       name: sceneObject.name,
       type: this.getObjectType(object3D),
       position: {
@@ -123,7 +125,11 @@ export class EditorStore {
       sceneObject,
     };
 
-    return this.addModel(modelData);
+    runInAction(() => {
+      this.models.set(sceneObject.id, model);
+    });
+
+    return sceneObject.id;
   }
 
   // 移除模型
@@ -164,6 +170,35 @@ export class EditorStore {
         if (updates.color && object3D instanceof THREE.Mesh && object3D.material instanceof THREE.Material && 'color' in object3D.material) {
           (object3D.material as any).color.setHex(parseInt(updates.color.replace('#', ''), 16));
         }
+        
+        // 更新材质属性
+        if (updates.material && object3D instanceof THREE.Mesh && object3D.material instanceof THREE.Material) {
+          const material = object3D.material as any;
+          if (updates.material.metalness !== undefined && 'metalness' in material) {
+            material.metalness = updates.material.metalness;
+          }
+          if (updates.material.roughness !== undefined && 'roughness' in material) {
+            material.roughness = updates.material.roughness;
+          }
+          if (updates.material.opacity !== undefined) {
+            material.opacity = updates.material.opacity;
+          }
+          if (updates.material.transparent !== undefined) {
+            material.transparent = updates.material.transparent;
+          }
+          material.needsUpdate = true;
+        }
+        
+        // 通知编辑器状态变化（如果编辑器实例存在）
+        if (this.editor) {
+          this.editor.dispatch({
+            type: 'UPDATE_SCENE_OBJECT',
+            payload: { 
+              id, 
+              properties: updates 
+            }
+          });
+        }
       }
     });
   }
@@ -194,6 +229,13 @@ export class EditorStore {
   clearSelection() {
     runInAction(() => {
       this.selectedModelIds = [];
+    });
+  }
+
+  // 设置选中的模型ID列表（用于同步）
+  setSelectedModelIds(ids: string[]) {
+    runInAction(() => {
+      this.selectedModelIds = [...ids];
     });
   }
 

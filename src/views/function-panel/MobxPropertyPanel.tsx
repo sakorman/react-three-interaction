@@ -355,6 +355,8 @@ export const MobxPropertyPanel: React.FC = observer(() => {
     editorStore.togglePropertyPanel();
   };
 
+
+
   return (
     <PanelContainer>
       <PanelHeader>
