@@ -16,9 +16,11 @@ const PanelContainer = styled.div`
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
-  overflow: hidden;
+  overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
 `;
 
 const PanelHeader = styled.div`
@@ -28,6 +30,7 @@ const PanelHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 `;
 
 const PanelTitle = styled.h3`
@@ -53,8 +56,6 @@ const CloseButton = styled.button`
 
 const PanelContent = styled.div`
   padding: 16px;
-  overflow-y: auto;
-  max-height: calc(60vh - 60px);
 `;
 
 const PropertySection = styled.div`
@@ -127,6 +128,7 @@ const SelectionSummary = styled.div`
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 12px;
   color: #ccc;
+  flex-shrink: 0;
 `;
 
 interface PropertyEditorProps {
