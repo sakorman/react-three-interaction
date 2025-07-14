@@ -46,6 +46,8 @@
 		"three": ">=0.150.0"
 	},
 	"dependencies": {
+		"@ant-design/icons": "^6.0.0",
+		"antd": "^5.26.4",
 		"@react-three/drei": "^9.92.7",
 		"@react-three/fiber": "^8.15.12",
 		"clsx": "^2.0.0",

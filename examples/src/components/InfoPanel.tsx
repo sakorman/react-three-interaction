@@ -1,38 +1,7 @@
 import React from 'react';
-import styled from 'styled-components';
+import { Card, Typography, List } from 'antd';
 
-const InfoContainer = styled.div`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: rgba(45, 45, 55, 0.9);
-  border-radius: 8px;
-  padding: 16px;
-  color: white;
-  font-size: 13px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1000;
-  max-width: 300px;
-`;
-
-const InfoTitle = styled.h3`
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  color: #e0e0e0;
-`;
-
-const InfoList = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-`;
-
-const InfoItem = styled.li`
-  margin: 4px 0;
-  font-size: 12px;
-  color: #ccc;
-`;
+const { Title, Text } = Typography;
 
 interface InfoPanelProps {
   activeTool: string;
@@ -68,14 +37,39 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ activeTool }) => {
     }
   };
 
+  const instructions = getToolInstructions();
+  const toolTitle = activeTool === 'select' ? '选择工具' : activeTool === 'drag' ? '拖拽工具' : '当前工具';
+
   return (
-    <InfoContainer>
-      <InfoTitle>操作说明 - {activeTool === 'select' ? '选择工具' : activeTool === 'drag' ? '拖拽工具' : '当前工具'}</InfoTitle>
-      <InfoList>
-        {getToolInstructions().map((instruction, index) => (
-          <InfoItem key={index}>{instruction}</InfoItem>
-        ))}
-      </InfoList>
-    </InfoContainer>
+    <Card
+      title={`操作说明 - ${toolTitle}`}
+      style={{
+        position: 'fixed',
+        top: 20,
+        right: 20,
+        width: 300,
+        backdropFilter: 'blur(10px)',
+        zIndex: 1000,
+        backgroundColor: 'rgba(45, 45, 55, 0.8)',
+      }}
+      headStyle={{ 
+        color: '#e0e0e0',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+        padding: '0 16px',
+        minHeight: '40px',
+      }}
+      bodyStyle={{ padding: '12px 16px', color: '#ccc' }}
+      bordered={false}
+    >
+      <List
+        dataSource={instructions}
+        renderItem={(item) => (
+          <List.Item style={{ padding: '4px 0', borderBottom: 'none' }}>
+            <Text style={{ color: '#ccc', fontSize: '12px' }}>{item}</Text>
+          </List.Item>
+        )}
+        size="small"
+      />
+    </Card>
   );
 }; 
