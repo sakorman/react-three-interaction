@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.4]
+
+### Enhanced
+- **UX:** 基于antDesign重构属性面板、选择菜单、资源管理器。
+
 ## [1.2.3]
 
 ### Fixed
