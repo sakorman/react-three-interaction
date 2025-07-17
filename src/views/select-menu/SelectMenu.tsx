@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Dropdown, Menu } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dropdown, Space } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   CopyOutlined,
@@ -8,16 +8,41 @@ import {
   EyeInvisibleOutlined,
   AimOutlined,
   SyncOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  MoreOutlined,
+  SettingOutlined,
+  BgColorsOutlined
 } from '@ant-design/icons';
 
 import { useEditor } from '../../hooks/useEditor';
 import { useSelection } from '../../hooks/useSelection';
+import {
+  SelectMenuContainer,
+  DropdownContent,
+  MenuHeader,
+  SelectionInfo,
+  SelectionBadge,
+  MenuContainer,
+  MenuItemIcon,
+  HiddenTrigger,
+  StyledTooltip
+} from './SelectMenu.styles';
 
-export const SelectMenu: React.FC = () => {
+interface SelectMenuProps {
+  className?: string;
+}
+
+export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
   const { state, dispatch, editor } = useEditor();
   const { selectedObjects, hasSelection } = useSelection();
   const menuRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (state.showSelectMenu) {
+      setVisible(true);
+    }
+  }, [state.showSelectMenu]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -25,18 +50,38 @@ export const SelectMenu: React.FC = () => {
         handleClose();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    if (visible) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
-  }, []);
+  }, [visible]);
 
   if (!state.showSelectMenu || !state.selectMenuPosition) {
     return null;
   }
 
   const handleClose = () => {
+    setVisible(false);
     dispatch({ type: 'HIDE_SELECT_MENU' });
+  };
+
+  const handleMenuClick = (action: () => void) => {
+    return () => {
+      action();
+      handleClose();
+    };
   };
 
   const handleCopy = () => {
@@ -105,35 +150,201 @@ export const SelectMenu: React.FC = () => {
 
   const hasHiddenObjects = selectedObjects.some(obj => !obj.visible);
   const hasVisibleObjects = selectedObjects.some(obj => obj.visible);
+  const selectedCount = selectedObjects.length;
 
-  const items: MenuProps['items'] = [
-    { key: 'copy', label: '复制', icon: <CopyOutlined />, onClick: handleCopy, disabled: !hasSelection },
-    { key: 'duplicate', label: '重复', icon: <ReconciliationOutlined />, onClick: handleDuplicate, disabled: !hasSelection },
+  // 构建菜单项
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'copy',
+      label: (
+        <StyledTooltip title="复制选中对象 (Ctrl+C)" placement="right">
+          <Space>
+            <MenuItemIcon className="menu-item-icon">
+              <CopyOutlined />
+            </MenuItemIcon>
+            复制
+          </Space>
+        </StyledTooltip>
+      ),
+      onClick: handleMenuClick(handleCopy),
+      disabled: !hasSelection,
+    },
+    {
+      key: 'duplicate',
+      label: (
+        <StyledTooltip title="重复选中对象 (Ctrl+D)" placement="right">
+          <Space>
+            <MenuItemIcon className="menu-item-icon">
+              <ReconciliationOutlined />
+            </MenuItemIcon>
+            重复
+          </Space>
+        </StyledTooltip>
+      ),
+      onClick: handleMenuClick(handleDuplicate),
+      disabled: !hasSelection,
+    },
     { type: 'divider' },
-    ...(hasVisibleObjects ? [{ key: 'hide', label: '隐藏', icon: <EyeInvisibleOutlined />, onClick: handleHide, disabled: !hasSelection }] : []),
-    ...(hasHiddenObjects ? [{ key: 'show', label: '显示', icon: <EyeOutlined />, onClick: handleShow, disabled: !hasSelection }] : []),
+    // 可见性控制
+    ...(hasVisibleObjects ? [{
+      key: 'hide',
+      label: (
+        <StyledTooltip title="隐藏选中对象 (H)" placement="right">
+          <Space>
+            <MenuItemIcon className="menu-item-icon">
+              <EyeInvisibleOutlined />
+            </MenuItemIcon>
+            隐藏
+          </Space>
+        </StyledTooltip>
+      ),
+      onClick: handleMenuClick(handleHide),
+      disabled: !hasSelection,
+    }] : []),
+    ...(hasHiddenObjects ? [{
+      key: 'show',
+      label: (
+        <StyledTooltip title="显示选中对象 (Shift+H)" placement="right">
+          <Space>
+            <MenuItemIcon className="menu-item-icon">
+              <EyeOutlined />
+            </MenuItemIcon>
+            显示
+          </Space>
+        </StyledTooltip>
+      ),
+      onClick: handleMenuClick(handleShow),
+      disabled: !hasSelection,
+    }] : []),
     { type: 'divider' },
-    { key: 'focus', label: '聚焦到对象', icon: <AimOutlined />, onClick: handleFocus, disabled: !hasSelection },
-    { key: 'reset', label: '重置变换', icon: <SyncOutlined />, onClick: handleReset, disabled: !hasSelection },
+    // 变换操作
+    {
+      key: 'focus',
+      label: (
+        <StyledTooltip title="聚焦到对象 (F)" placement="right">
+          <Space>
+            <MenuItemIcon className="menu-item-icon">
+              <AimOutlined />
+            </MenuItemIcon>
+            聚焦到对象
+          </Space>
+        </StyledTooltip>
+      ),
+      onClick: handleMenuClick(handleFocus),
+      disabled: !hasSelection,
+    },
+    {
+      key: 'reset',
+      label: (
+        <StyledTooltip title="重置变换 (Ctrl+R)" placement="right">
+          <Space>
+            <MenuItemIcon className="menu-item-icon">
+              <SyncOutlined />
+            </MenuItemIcon>
+            重置变换
+          </Space>
+        </StyledTooltip>
+      ),
+      onClick: handleMenuClick(handleReset),
+      disabled: !hasSelection,
+    },
     { type: 'divider' },
-    { key: 'delete', label: '删除', icon: <DeleteOutlined />, onClick: handleDelete, disabled: !hasSelection, danger: true },
+    // 高级操作子菜单
+    {
+      key: 'advanced',
+      label: (
+        <Space>
+          <MenuItemIcon className="menu-item-icon">
+            <MoreOutlined />
+          </MenuItemIcon>
+          高级操作
+        </Space>
+      ),
+      disabled: !hasSelection,
+      children: [
+        {
+          key: 'material',
+          label: (
+            <Space>
+              <MenuItemIcon className="menu-item-icon">
+                <BgColorsOutlined />
+              </MenuItemIcon>
+              材质设置
+            </Space>
+          ),
+          disabled: !hasSelection,
+        },
+        {
+          key: 'properties',
+          label: (
+            <Space>
+              <MenuItemIcon className="menu-item-icon">
+                <SettingOutlined />
+              </MenuItemIcon>
+              属性面板
+            </Space>
+          ),
+          disabled: !hasSelection,
+        },
+      ],
+    },
+    { type: 'divider' },
+    // 危险操作
+    {
+      key: 'delete',
+      label: (
+        <StyledTooltip title="删除选中对象 (Delete)" placement="right">
+          <Space>
+            <MenuItemIcon className="menu-item-icon">
+              <DeleteOutlined />
+            </MenuItemIcon>
+            删除
+          </Space>
+        </StyledTooltip>
+      ),
+      onClick: handleMenuClick(handleDelete),
+      disabled: !hasSelection,
+      danger: true,
+    },
   ];
-  
-  const menu = <Menu items={items} onClick={handleClose} />;
+
+  const dropdownRender = () => (
+    <DropdownContent>
+      {/* 选中对象信息头部 */}
+      <MenuHeader>
+        <SelectionBadge 
+          count={selectedCount} 
+          size="small"
+        />
+        <SelectionInfo>
+          {selectedCount === 1 ? '个对象已选中' : `个对象已选中`}
+        </SelectionInfo>
+      </MenuHeader>
+
+      {/* 菜单项 */}
+      <MenuContainer items={menuItems} />
+    </DropdownContent>
+  );
 
   return (
-    <div
+    <SelectMenuContainer
       ref={menuRef}
+      className={className}
       style={{
-        position: 'fixed',
         left: state.selectMenuPosition.x,
         top: state.selectMenuPosition.y,
-        zIndex: 2000,
       }}
     >
-      <Dropdown overlay={menu} open>
-        <div />
+      <Dropdown
+        open={visible}
+        onOpenChange={setVisible}
+        dropdownRender={dropdownRender}
+        trigger={['contextMenu']}
+        placement="bottomLeft"
+        getPopupContainer={() => document.body}
+      >
+        <HiddenTrigger />
       </Dropdown>
-    </div>
+    </SelectMenuContainer>
   );
 }; 
