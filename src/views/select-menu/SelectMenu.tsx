@@ -41,8 +41,18 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
   useEffect(() => {
     if (state.showSelectMenu) {
       setVisible(true);
+    } else {
+      setVisible(false);
     }
   }, [state.showSelectMenu]);
+
+  // 监听选中状态变化，没有选中对象时自动隐藏菜单
+  useEffect(() => {
+    if (!hasSelection && visible) {
+      setVisible(false);
+      dispatch({ type: 'HIDE_SELECT_MENU' });
+    }
+  }, [hasSelection, visible, dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -339,7 +349,7 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
         open={visible}
         onOpenChange={setVisible}
         dropdownRender={dropdownRender}
-        trigger={['contextMenu']}
+        trigger={[]}
         placement="bottomLeft"
         getPopupContainer={() => document.body}
       >

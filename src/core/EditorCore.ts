@@ -84,6 +84,29 @@ export class EditorCore {
     this.initialize();
   }
 
+  // 计算3D对象在屏幕上的位置
+  private getObjectScreenPosition(objectId: string): { x: number; y: number } | null {
+    const sceneObject = this.sceneManager.getObject(objectId);
+    if (!sceneObject) return null;
+
+    const object3D = sceneObject.object3D;
+    const canvas = this.renderer.domElement;
+    const rect = canvas.getBoundingClientRect();
+
+    // 获取对象的世界位置
+    const worldPosition = new THREE.Vector3();
+    object3D.getWorldPosition(worldPosition);
+
+    // 将世界坐标转换为屏幕坐标
+    const screenPosition = worldPosition.clone().project(this.camera);
+    
+    // 转换为像素坐标
+    const x = (screenPosition.x * 0.5 + 0.5) * rect.width + rect.left;
+    const y = (screenPosition.y * -0.5 + 0.5) * rect.height + rect.top;
+
+    return { x, y };
+  }
+
   private initializeStore() {
     this.store = create<EditorState & { dispatch: (action: EditorAction) => void }>()(
       subscribeWithSelector((set, get) => ({
@@ -109,6 +132,20 @@ export class EditorCore {
         // 触发选中事件
         if (selectedObjectIds.length > 0) {
           this.eventSystem.emit('object:select', { objectIds: selectedObjectIds });
+          
+          // 自动显示SelectMenu在第一个选中对象附近
+          const firstSelectedId = selectedObjectIds[0];
+          const screenPosition = this.getObjectScreenPosition(firstSelectedId);
+          if (screenPosition) {
+            // 添加一些偏移，让菜单显示在对象右侧
+            this.store.getState().dispatch({
+              type: 'SHOW_SELECT_MENU',
+              payload: { x: screenPosition.x + 50, y: screenPosition.y },
+            });
+          }
+        } else {
+          // 没有选中对象时隐藏菜单
+          this.store.getState().dispatch({ type: 'HIDE_SELECT_MENU' });
         }
         
         // 同步到 MobX Store
@@ -422,15 +459,7 @@ export class EditorCore {
 
   private onContextMenu(event: MouseEvent): void {
     event.preventDefault();
-    this.updateMousePosition(event);
-    
-    const clickedObject = this.sceneManager.getObjectAtMouse(this.mouse, this.camera);
-    if (clickedObject) {
-      this.store.getState().dispatch({
-        type: 'SHOW_SELECT_MENU',
-        payload: { x: event.clientX, y: event.clientY },
-      });
-    }
+    // SelectMenu现在通过选中对象自动显示，不需要在右键时触发
   }
 
   private onWindowResize(): void {
