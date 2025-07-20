@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import * as THREE from 'three';
+import { runInAction } from 'mobx';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { 
   createEditor, 
@@ -20,6 +21,7 @@ import { InfoPanel } from './InfoPanel';
 
 export const App: React.FC = () => {
   const [activeTool, setActiveTool] = useState<string>('select');
+  const [editorReady, setEditorReady] = useState<boolean>(false);
   const editorRef = useRef<any>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
 
@@ -52,6 +54,18 @@ export const App: React.FC = () => {
 
     // 添加一些初始对象
     addInitialObjects(editor);
+    
+    // 标记编辑器已经准备好了
+    setEditorReady(true);
+    
+    // 初始化完成后确保UI状态正确
+    // 延迟一帧确保所有初始化完成
+    requestAnimationFrame(() => {
+      runInAction(() => {
+        editorStore.showResourceManager = true;
+        editorStore.showPropertyPanel = true;
+      });
+    });
   }, []);
 
   const addInitialObjects = (editor: any) => {
@@ -162,7 +176,7 @@ export const App: React.FC = () => {
       
       <InfoPanel activeTool={activeTool} />
       
-      {editorRef.current && (
+      {editorReady && editorRef.current && (
         <EditorProvider editor={editorRef.current}>
           <MobxPropertyPanel />
           <SelectMenu />

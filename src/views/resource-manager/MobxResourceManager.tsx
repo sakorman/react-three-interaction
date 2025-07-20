@@ -9,11 +9,11 @@ const { Text } = Typography;
 
 const getModelIcon = (type: string) => {
     switch (type) {
-      case 'cube': return '큐브';
-      case 'sphere': return '구체';
-      case 'cylinder': return '실린더';
-      case 'plane': return '평면';
-      case 'mesh': return '메시';
+      case 'cube': return '立方体';
+      case 'sphere': return '球体';
+      case 'cylinder': return '圆柱体';
+      case 'plane': return '平面';
+      case 'mesh': return '网格';
       default: return '❓';
     }
 };
