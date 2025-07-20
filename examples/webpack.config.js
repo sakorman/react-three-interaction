@@ -2,6 +2,13 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
+    cache: {
+    type: 'filesystem',
+    buildDependencies: {
+      config: [__filename]
+    },
+    version: require('../package.json').version // 依赖变更时自动失效缓存
+  },
   entry: './src/main.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -23,10 +30,21 @@ module.exports = {
         test: /\.(ts|tsx)$/,
         exclude: /node_modules/,
         use: {
-          loader: 'ts-loader',
+          loader: 'swc-loader',
           options: {
-            transpileOnly: true,
-          },
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                tsx: true,
+                decorators: true
+              },
+              transform: {
+                react: {
+                  runtime: 'automatic'
+                }
+              }
+            }
+          }
         },
       },
       {
