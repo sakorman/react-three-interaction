@@ -8,6 +8,7 @@ import {
   MobxPropertyPanel,
   SelectMenu,
   MobxResourceManager,
+  TopView,
   DebugPanel,
   createBasicGeometry,
   createBasicMaterial,
@@ -159,6 +160,11 @@ export const App: React.FC = () => {
     editorStore.togglePropertyPanel();
   }, []);
 
+  const handleToggleTopView = useCallback(() => {
+    if (!editorRef.current) return;
+    editorStore.toggleTopView();
+  }, []);
+
   return (
     <>
       <CanvasContainer onCanvasReady={handleCanvasReady} />
@@ -172,6 +178,7 @@ export const App: React.FC = () => {
         onClearScene={handleClearScene}
         onToggleResourceManager={handleToggleResourceManager}
         onToggleFunctionPanel={handleToggleFunctionPanel}
+        onToggleTopView={handleToggleTopView}
       />
       
       <InfoPanel activeTool={activeTool} />
@@ -181,6 +188,7 @@ export const App: React.FC = () => {
           <MobxPropertyPanel />
           <SelectMenu />
           <MobxResourceManager />
+          <TopView visible={editorStore.showTopView} />
           <DebugPanel />
         </EditorProvider>
       )}

@@ -7,6 +7,7 @@ import {
   DeleteOutlined,
   AppstoreOutlined,
   SettingOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 
 interface ToolbarProps {
@@ -18,6 +19,7 @@ interface ToolbarProps {
   onClearScene: () => void;
   onToggleResourceManager: () => void;
   onToggleFunctionPanel: () => void;
+  onToggleTopView: () => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -29,6 +31,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onClearScene,
   onToggleResourceManager,
   onToggleFunctionPanel,
+  onToggleTopView,
 }) => {
   return (
     <Card
@@ -96,6 +99,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <Button
             onClick={onToggleFunctionPanel}
             icon={<SettingOutlined />}
+          />
+        </Tooltip>
+
+        <Tooltip title="俯视图">
+          <Button
+            onClick={onToggleTopView}
+            icon={<EyeOutlined />}
           />
         </Tooltip>
       </Space>

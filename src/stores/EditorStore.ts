@@ -39,6 +39,7 @@ export class EditorStore {
   // UI状态
   showPropertyPanel: boolean = true;
   showResourceManager: boolean = true;
+  showTopView: boolean = true;
   
   // 编辑器实例引用
   private editor: EditorCore | null = null;
@@ -50,6 +51,11 @@ export class EditorStore {
   // 设置编辑器实例
   setEditor(editor: EditorCore) {
     this.editor = editor;
+  }
+
+  // 获取编辑器实例
+  get editorInstance(): EditorCore | null {
+    return this.editor;
   }
 
   // 添加模型到场景
@@ -264,6 +270,20 @@ export class EditorStore {
   toggleResourceManager() {
     runInAction(() => {
       this.showResourceManager = !this.showResourceManager;
+    });
+  }
+
+  // 切换俯视图显示
+  toggleTopView() {
+    runInAction(() => {
+      this.showTopView = !this.showTopView;
+    });
+  }
+
+  // 设置俯视图可见性
+  setTopViewVisible(visible: boolean) {
+    runInAction(() => {
+      this.showTopView = visible;
     });
   }
 

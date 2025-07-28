@@ -31,6 +31,7 @@ export { MobxPropertyPanel } from './views/function-panel/MobxPropertyPanel';
 export { SelectMenu } from './views/select-menu/SelectMenu';
 export { ResourceManager } from './views/resource-manager/ResourceManager';
 export { MobxResourceManager } from './views/resource-manager';
+export { TopView } from './views/top-view';
 export { DebugPanel } from './views/debug/DebugPanel';
 
 // MobX Store
