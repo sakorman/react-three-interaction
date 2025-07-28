@@ -1,6 +1,6 @@
 {
 	"name": "react-three-interaction",
-	"version": "1.2.6",
+	"version": "1.2.7",
 	"description": "A React-based Three.js interaction library with built-in tools for selecting, hovering, dragging, moving, and adding 3D models",
 	"main": "dist/index.js",
 	"module": "dist/index.esm.js",
