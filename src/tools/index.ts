@@ -1,6 +1,7 @@
 export { BaseTool } from './BaseTool';
 export { SelectTool } from './select/SelectTool';
 export { DragTool } from './drag/DragTool';
+export { TopViewTool } from './top-view';
 
 // 工具工厂函数
 import { EditorCore } from '../core/EditorCore';

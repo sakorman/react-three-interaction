@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.8 ]
+### Fixed 
+- **UI:** 修复俯视图拖拽功能失效问题
+
 ## [1.2.7]
 ### Enhanced 
 - **UI:** 创建了一个独立的俯视图窗口，提供实时渲染、多视角切换等功能
