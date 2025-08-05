@@ -191,12 +191,15 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
     }
   };
 
-  const handleCanvasMouseEnter = () => {
-    setShowHelp(true);
+  const handleToggleHelp = () => {
+    setShowHelp(!showHelp);
+  };
+
+  const handleCloseHelp = () => {
+    setShowHelp(false);
   };
 
   const handleCanvasMouseLeave = () => {
-    setShowHelp(false);
     setInteractionState(null);
   };
 
@@ -272,7 +275,6 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
       </TopViewHeader>
 
       <CanvasContainer 
-        onMouseEnter={handleCanvasMouseEnter}
         onMouseLeave={handleCanvasMouseLeave}
       >
         <canvas ref={canvasRef} />
@@ -290,12 +292,33 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
         )}
 
         {/* 帮助提示 */}
-        <HelpOverlay className={showHelp ? 'visible' : ''}>
-          <div>左键: 选择/拖拽对象</div>
-          <div>右键: 拖拽视图</div>
-          <div>滚轮: 缩放视图</div>
-          <div>Ctrl+左键: 多选</div>
-        </HelpOverlay>
+        {showHelp && (
+          <HelpOverlay className="visible">
+            <div style={{ position: 'relative', padding: '16px', background: 'rgba(0,0,0,0.8)', borderRadius: '8px' }}>
+              <button 
+                onClick={handleCloseHelp}
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                ✕
+              </button>
+              <div style={{ color: 'white', lineHeight: '1.5' }}>
+                <div>左键: 选择/拖拽对象</div>
+                <div>右键: 拖拽视图</div>
+                <div>滚轮: 缩放视图</div>
+                <div>Ctrl+左键: 多选</div>
+              </div>
+            </div>
+          </HelpOverlay>
+        )}
       </CanvasContainer>
 
       <TopViewToolbar>
@@ -319,6 +342,12 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
         </ToolButton>
         <ToolButton onClick={handleResetView}>
           重置
+        </ToolButton>
+        <ToolButton 
+          className={showHelp ? 'active' : ''}
+          onClick={handleToggleHelp}
+        >
+          帮助
         </ToolButton>
       </TopViewToolbar>
     </TopViewContainer>
