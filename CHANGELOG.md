@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.10]
+### Enhanced 
+- **UI:** 新增俯视图拖拉拽功能
+
 ## [1.2.9]
 ### Enhanced 
 - **UI:** 修复俯视图拖拽功能失效问题

@@ -30,8 +30,16 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
   const topViewToolRef = useRef<TopViewTool | null>(null);
   const [viewType, setViewType] = useState<'top' | 'front' | 'side'>('top');
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [showHelp, setShowHelp] = useState(false);
   const [interactionState, setInteractionState] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+  
+  // 窗口位置和尺寸状态
+  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [size, setSize] = useState({ width: 300, height: 300 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, windowX: 0, windowY: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   // 获取主编辑器实例
   const editor = editorStore.editorInstance;
@@ -192,16 +200,81 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
   };
 
   const handleToggleHelp = () => {
-    setShowHelp(!showHelp);
-  };
-
-  const handleCloseHelp = () => {
-    setShowHelp(false);
+    setShowHelp(prev => !prev);
   };
 
   const handleCanvasMouseLeave = () => {
     setInteractionState(null);
   };
+
+  // 拖拽处理器
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.top-view-header')) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX,
+        y: e.clientY,
+        windowX: position.x,
+        windowY: position.y
+      });
+    }
+  }, [position]);
+
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: size.width,
+      height: size.height
+    });
+  }, [size]);
+
+  // 全局鼠标移动和释放事件
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        const deltaX = e.clientX - dragStart.x;
+        const deltaY = e.clientY - dragStart.y;
+        setPosition({
+          x: Math.max(0, Math.min(window.innerWidth - size.width, dragStart.windowX + deltaX)),
+          y: Math.max(0, Math.min(window.innerHeight - size.height, dragStart.windowY + deltaY))
+        });
+      } else if (isResizing) {
+        const deltaX = e.clientX - resizeStart.x;
+        const deltaY = e.clientY - resizeStart.y;
+        const newWidth = Math.max(200, resizeStart.width + deltaX);
+        const newHeight = Math.max(200, resizeStart.height + deltaY);
+        setSize({
+          width: Math.min(window.innerWidth - position.x, newWidth),
+          height: Math.min(window.innerHeight - position.y, newHeight)
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setIsResizing(false);
+    };
+
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = isDragging ? 'move' : 'se-resize';
+    } else {
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [isDragging, isResizing, dragStart, resizeStart, size, position]);
 
   // 响应窗口大小变化
   const handleResize = useCallback(() => {
@@ -217,6 +290,16 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
 
     rendererRef.current.setSize(width, height);
   }, []);
+
+  // 响应俯视图窗口尺寸变化
+  useEffect(() => {
+    // 延迟执行以确保DOM更新完成
+    const timer = setTimeout(() => {
+      handleResize();
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [size, handleResize]);
 
   useEffect(() => {
     if (visible) {
@@ -266,8 +349,17 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
   }
 
   return (
-    <TopViewContainer>
-      <TopViewHeader>
+    <TopViewContainer 
+      style={{
+        left: position.x,
+        top: position.y,
+        width: size.width,
+        height: size.height,
+        cursor: isDragging ? 'move' : 'default'
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      <TopViewHeader className="top-view-header">
         <TopViewTitle>
           {viewType === 'top' ? '俯视图' : viewType === 'front' ? '前视图' : '侧视图'}
         </TopViewTitle>
@@ -292,33 +384,12 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
         )}
 
         {/* 帮助提示 */}
-        {showHelp && (
-          <HelpOverlay className="visible">
-            <div style={{ position: 'relative', padding: '16px', background: 'rgba(0,0,0,0.8)', borderRadius: '8px' }}>
-              <button 
-                onClick={handleCloseHelp}
-                style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '16px'
-                }}
-              >
-                ✕
-              </button>
-              <div style={{ color: 'white', lineHeight: '1.5' }}>
-                <div>左键: 选择/拖拽对象</div>
-                <div>右键: 拖拽视图</div>
-                <div>滚轮: 缩放视图</div>
-                <div>Ctrl+左键: 多选</div>
-              </div>
-            </div>
-          </HelpOverlay>
-        )}
+        <HelpOverlay className={showHelp ? 'visible' : ''}>
+          <div>左键: 选择/拖拽对象</div>
+          <div>右键: 拖拽视图</div>
+          <div>滚轮: 缩放视图</div>
+          <div>Ctrl+左键: 多选</div>
+        </HelpOverlay>
       </CanvasContainer>
 
       <TopViewToolbar>
@@ -350,6 +421,22 @@ export const TopView: React.FC<TopViewProps> = observer(({ visible = true }) => 
           帮助
         </ToolButton>
       </TopViewToolbar>
+      
+      {/* 缩放控制器 */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          right: 0,
+          width: 12,
+          height: 12,
+          background: 'rgba(255, 255, 255, 0.3)',
+          cursor: 'se-resize',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.5)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.5)',
+        }}
+        onMouseDown={handleResizeMouseDown}
+      />
     </TopViewContainer>
   );
 }); 

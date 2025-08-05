@@ -23,6 +23,7 @@ import { InfoPanel } from './InfoPanel';
 export const App: React.FC = () => {
   const [activeTool, setActiveTool] = useState<string>('select');
   const [editorReady, setEditorReady] = useState<boolean>(false);
+  const [showInfoPanel, setShowInfoPanel] = useState<boolean>(false);
   const editorRef = useRef<any>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
 
@@ -165,6 +166,10 @@ export const App: React.FC = () => {
     editorStore.toggleTopView();
   }, []);
 
+  const handleToggleInfoPanel = useCallback(() => {
+    setShowInfoPanel(prev => !prev);
+  }, []);
+
   return (
     <>
       <CanvasContainer onCanvasReady={handleCanvasReady} />
@@ -179,9 +184,15 @@ export const App: React.FC = () => {
         onToggleResourceManager={handleToggleResourceManager}
         onToggleFunctionPanel={handleToggleFunctionPanel}
         onToggleTopView={handleToggleTopView}
+        onToggleInfoPanel={handleToggleInfoPanel}
+        showInfoPanel={showInfoPanel}
       />
       
-      <InfoPanel activeTool={activeTool} />
+      <InfoPanel 
+        activeTool={activeTool} 
+        visible={showInfoPanel}
+        onClose={handleToggleInfoPanel}
+      />
       
       {editorReady && editorRef.current && (
         <EditorProvider editor={editorRef.current}>

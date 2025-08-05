@@ -3,10 +3,6 @@ import styled from 'styled-components';
 // 俯视图容器
 export const TopViewContainer = styled.div`
   position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 200px;
-  height: 200px;
   background: rgba(45, 45, 55, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -19,6 +15,13 @@ export const TopViewContainer = styled.div`
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  user-select: none;
+  min-width: 200px;
+  min-height: 200px;
+  
+  &:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
 `;
 
 // 俯视图头部
@@ -30,6 +33,15 @@ export const TopViewHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   min-height: 32px;
+  cursor: move;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  
+  &:active {
+    background: rgba(255, 255, 255, 0.12);
+  }
 `;
 
 // 俯视图标题

@@ -1,13 +1,16 @@
 import React from 'react';
-import { Card, Typography, List } from 'antd';
+import { Card, Typography, List, Button } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
 interface InfoPanelProps {
   activeTool: string;
+  visible?: boolean;
+  onClose?: () => void;
 }
 
-export const InfoPanel: React.FC<InfoPanelProps> = ({ activeTool }) => {
+export const InfoPanel: React.FC<InfoPanelProps> = ({ activeTool, visible = true, onClose }) => {
   const getToolInstructions = () => {
     switch (activeTool) {
       case 'select':
@@ -40,9 +43,24 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ activeTool }) => {
   const instructions = getToolInstructions();
   const toolTitle = activeTool === 'select' ? '选择工具' : activeTool === 'drag' ? '拖拽工具' : '当前工具';
 
+  if (!visible) {
+    return null;
+  }
+
   return (
     <Card
       title={`操作说明 - ${toolTitle}`}
+      extra={
+        onClose && (
+          <Button
+            type="text"
+            size="small"
+            icon={<CloseOutlined />}
+            onClick={onClose}
+            style={{ color: '#ccc' }}
+          />
+        )
+      }
       style={{
         position: 'fixed',
         top: 20,
