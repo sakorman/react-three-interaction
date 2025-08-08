@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dropdown, Space } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -54,6 +54,11 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
     }
   }, [hasSelection, visible, dispatch]);
 
+  const handleClose = useCallback(() => {
+    setVisible(false);
+    dispatch({ type: 'HIDE_SELECT_MENU' });
+  }, [dispatch]);
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -76,16 +81,11 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [visible]);
+  }, [handleClose, visible]);
 
   if (!state.showSelectMenu || !state.selectMenuPosition) {
     return null;
   }
-
-  const handleClose = () => {
-    setVisible(false);
-    dispatch({ type: 'HIDE_SELECT_MENU' });
-  };
 
   const handleMenuClick = (action: () => void) => {
     return () => {
@@ -95,8 +95,8 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
   };
 
   const handleCopy = () => {
-    if (!hasSelection || !editor) return;
-    selectedObjects.forEach(obj => {
+    if (!hasSelection || !editor || !selectedObjects?.length) return;
+    selectedObjects?.forEach(obj => {
       const clonedObject = editor.sceneManagerInstance.cloneObject(obj.id);
       if (clonedObject) {
         clonedObject.object3D.position.x += 0.5;
@@ -106,8 +106,8 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
   };
 
   const handleDuplicate = () => {
-    if (!hasSelection || !editor) return;
-    selectedObjects.forEach(obj => {
+    if (!hasSelection || !editor || !selectedObjects?.length) return;
+    selectedObjects?.forEach(obj => {
       const clonedObject = editor.sceneManagerInstance.cloneObject(obj.id);
       if (clonedObject) {
         dispatch({ type: 'SELECT_OBJECTS', payload: [clonedObject.id] });
@@ -116,27 +116,27 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
   };
 
   const handleDelete = () => {
-    if (!hasSelection || !editor) return;
-    selectedObjects.forEach(obj => editor.removeObject(obj.id));
+    if (!hasSelection || !editor || !selectedObjects?.length) return;
+    selectedObjects?.forEach(obj => editor.removeObject(obj.id));
   };
 
   const handleHide = () => {
-    if (!hasSelection) return;
-    selectedObjects.forEach(obj => {
+    if (!hasSelection || !selectedObjects?.length) return;
+    selectedObjects?.forEach(obj => {
       dispatch({ type: 'UPDATE_SCENE_OBJECT', payload: { id: obj.id, properties: { visible: false } } });
     });
   };
 
   const handleShow = () => {
-    if (!hasSelection) return;
-    selectedObjects.forEach(obj => {
+    if (!hasSelection || !selectedObjects?.length) return;
+    selectedObjects?.forEach(obj => {
       dispatch({ type: 'UPDATE_SCENE_OBJECT', payload: { id: obj.id, properties: { visible: true } } });
     });
   };
 
   const handleReset = () => {
-    if (!hasSelection) return;
-    selectedObjects.forEach(obj => {
+    if (!hasSelection || !selectedObjects?.length) return;
+    selectedObjects?.forEach(obj => {
       dispatch({
         type: 'UPDATE_SCENE_OBJECT',
         payload: {
@@ -152,15 +152,15 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
   };
 
   const handleFocus = () => {
-    if (!hasSelection || !editor) return;
-    const bounds = selectedObjects[0].getBounds();
+    if (!hasSelection || !editor || !selectedObjects?.length) return;
+    const bounds = selectedObjects[0]?.getBounds();
     const center = bounds.center;
     dispatch({ type: 'UPDATE_CAMERA', payload: { target: [center.x, center.y, center.z] } });
   };
 
-  const hasHiddenObjects = selectedObjects.some(obj => !obj.visible);
-  const hasVisibleObjects = selectedObjects.some(obj => obj.visible);
-  const selectedCount = selectedObjects.length;
+  const hasHiddenObjects = selectedObjects?.some(obj => !obj.visible);
+  const hasVisibleObjects = selectedObjects?.some(obj => obj.visible);
+  const selectedCount = selectedObjects?.length || 0;
 
   // 构建菜单项
   const menuItems: MenuProps['items'] = [

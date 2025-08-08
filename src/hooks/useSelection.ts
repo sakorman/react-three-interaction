@@ -6,7 +6,7 @@ export const useSelection = () => {
   const { state, dispatch, editor } = useEditor();
 
   const selectedObjects = useMemo(() => {
-    if (!editor) return [];
+    if (!editor) return null;
     return state.selectedObjectIds
       .map(id => editor.getObject(id))
       .filter(obj => obj !== undefined);

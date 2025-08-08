@@ -30,7 +30,7 @@ export const FunctionPanel: React.FC = () => {
       <PanelHeader>
         <PanelTitle>
           {selectionCount === 0 ? '属性面板' : 
-           selectionCount === 1 ? `属性 - ${selectedObjects[0].name}` :
+           selectionCount === 1 ? `属性 - ${selectedObjects?.[0]?.name}` :
            `属性 - ${selectionCount} 个对象`}
         </PanelTitle>
         <CloseButton onClick={handleClose}>✕</CloseButton>
@@ -48,7 +48,7 @@ export const FunctionPanel: React.FC = () => {
             未选择任何对象
           </EmptyState>
         ) : (
-          selectedObjects.map(object => (
+          selectedObjects?.map(object => (
             <PropertyEditor
               key={object.id}
               object={object}
