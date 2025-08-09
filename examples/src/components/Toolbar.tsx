@@ -1,5 +1,7 @@
 import React from 'react';
-import { Button, Card, Space, Tooltip } from 'antd';
+import { observer } from 'mobx-react-lite';
+import { Button, Card, Space, Tooltip, ConfigProvider } from 'antd';
+import { themeStore } from '@/stores/ThemeStore';
 import {
   SelectOutlined,
   DragOutlined,
@@ -9,6 +11,9 @@ import {
   SettingOutlined,
   EyeOutlined,
   QuestionCircleOutlined,
+  BulbOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from '@ant-design/icons';
 
 interface ToolbarProps {
@@ -22,10 +27,11 @@ interface ToolbarProps {
   onToggleFunctionPanel: () => void;
   onToggleTopView: () => void;
   onToggleInfoPanel: () => void;
+  onToggleShadowSettings: () => void;
   showInfoPanel: boolean;
 }
 
-export const Toolbar: React.FC<ToolbarProps> = ({
+export const Toolbar: React.FC<ToolbarProps> = observer(({
   activeTool,
   onToolChange,
   onAddCube,
@@ -36,17 +42,38 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onToggleFunctionPanel,
   onToggleTopView,
   onToggleInfoPanel,
+  onToggleShadowSettings,
   showInfoPanel,
 }) => {
+  const theme = themeStore.currentTheme;
+  
+  const handleToggleTheme = () => {
+    themeStore.toggleTheme();
+  };
+
   return (
-    <Card
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: theme.colors.primary,
+          colorBgContainer: theme.colors.background,
+          colorBgElevated: theme.colors.surface,
+          colorText: theme.colors.text,
+          colorTextSecondary: theme.colors.textSecondary,
+          colorBorder: theme.colors.border,
+        },
+      }}
+    >
+      <Card
       style={{
         position: 'fixed',
         top: 20,
         left: 20,
         backdropFilter: 'blur(10px)',
         zIndex: 1000,
-        backgroundColor: 'rgba(45, 45, 55, 0.8)',
+        backgroundColor: theme.colors.overlay,
+        border: `1px solid ${theme.colors.border}`,
+        boxShadow: theme.shadows.md,
       }}
       bodyStyle={{
         padding: '12px',
@@ -114,6 +141,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           />
         </Tooltip>
 
+        <Tooltip title="阴影设置">
+          <Button
+            onClick={onToggleShadowSettings}
+            icon={<BulbOutlined />}
+          />
+        </Tooltip>
+
+        <Tooltip title={`切换到${theme.mode === 'light' ? '深色' : '浅色'}模式`}>
+          <Button
+            onClick={handleToggleTheme}
+            icon={theme.mode === 'light' ? <MoonOutlined /> : <SunOutlined />}
+          />
+        </Tooltip>
+
         <Tooltip title="操作说明">
           <Button
             type={showInfoPanel ? 'primary' : 'default'}
@@ -123,5 +164,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </Tooltip>
       </Space>
     </Card>
+    </ConfigProvider>
   );
-}; 
+}); 

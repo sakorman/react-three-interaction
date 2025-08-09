@@ -33,10 +33,14 @@ export { ResourceManager } from './views/resource-manager/ResourceManager';
 export { MobxResourceManager } from './views/resource-manager';
 export { TopView } from './views/top-view';
 export { DebugPanel } from './views/debug/DebugPanel';
+export { ShadowSettings } from './views/shadow-settings';
+export { ThemeProvider } from './views/theme-provider';
 
 // MobX Store
 export { EditorStore, editorStore } from './stores/EditorStore';
 export type { ModelData } from './stores/EditorStore';
+export { ThemeStore, themeStore } from './stores/ThemeStore';
+export type { Theme, ThemeMode } from './stores/ThemeStore';
 
 // Hooks
 export { useEditor } from './hooks/useEditor';

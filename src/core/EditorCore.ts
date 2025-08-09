@@ -308,7 +308,10 @@ export class EditorCore {
         break;
 
       case 'UPDATE_SETTINGS':
-        set({ settings: { ...state.settings, ...action.payload } });
+        const newSettings = { ...state.settings, ...action.payload };
+        set({ settings: newSettings });
+        // 应用阴影设置更新
+        this.applyShadowSettings(newSettings);
         break;
 
       case 'ADD_HISTORY_SNAPSHOT':
@@ -357,8 +360,9 @@ export class EditorCore {
     // 设置渲染器
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // 应用默认阴影设置
+    this.applyShadowSettings(this.store.getState().settings);
 
     // 设置相机
     this.camera.position.set(5, 5, 5);
@@ -371,6 +375,12 @@ export class EditorCore {
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
     directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 1024;
+    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.camera.near = 0.1;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.radius = 1;
+    directionalLight.shadow.bias = -0.0001;
     this.scene.add(directionalLight);
 
     // 添加事件监听器
@@ -573,6 +583,53 @@ export class EditorCore {
   public disableCameraControls(): void {
     if (this.cameraControls && this.cameraControls.enabled !== undefined) {
       this.cameraControls.enabled = false;
+    }
+  }
+
+  // 应用阴影设置
+  private applyShadowSettings(settings: any): void {
+    // 配置渲染器阴影设置
+    this.renderer.shadowMap.enabled = settings.enableShadows;
+    
+    if (settings.enableShadows) {
+      // 设置阴影贴图类型
+      switch (settings.shadowMapType) {
+        case 'Basic':
+          this.renderer.shadowMap.type = THREE.BasicShadowMap;
+          break;
+        case 'PCF':
+          this.renderer.shadowMap.type = THREE.PCFShadowMap;
+          break;
+        case 'PCFSoft':
+          this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+          break;
+        case 'VSM':
+          this.renderer.shadowMap.type = THREE.VSMShadowMap;
+          break;
+        default:
+          this.renderer.shadowMap.type = THREE.PCFShadowMap;
+      }
+
+      // 更新场景中所有的方向光阴影设置
+      this.scene.traverse((object) => {
+        if (object instanceof THREE.DirectionalLight && object.castShadow) {
+          object.shadow.mapSize.width = settings.shadowMapSize;
+          object.shadow.mapSize.height = settings.shadowMapSize;
+          object.shadow.camera.near = settings.shadowCameraNear;
+          object.shadow.camera.far = settings.shadowCameraFar;
+          object.shadow.radius = settings.shadowRadius;
+          object.shadow.bias = settings.shadowBias;
+          object.shadow.camera.updateProjectionMatrix();
+        }
+      });
+
+      // 确保场景中的对象启用阴影投射和接收
+      this.scene.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.castShadow = true;
+          object.receiveShadow = true;
+        }
+      });
     }
   }
 

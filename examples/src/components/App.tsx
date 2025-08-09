@@ -10,6 +10,8 @@ import {
   MobxResourceManager,
   TopView,
   DebugPanel,
+  ShadowSettings,
+  ThemeProvider,
   createBasicGeometry,
   createBasicMaterial,
   createMesh,
@@ -170,8 +172,12 @@ export const App: React.FC = () => {
     setShowInfoPanel(prev => !prev);
   }, []);
 
+  const handleToggleShadowSettings = useCallback(() => {
+    editorStore.toggleShadowSettings();
+  }, []);
+
   return (
-    <>
+    <ThemeProvider>
       <CanvasContainer onCanvasReady={handleCanvasReady} />
       
       <Toolbar
@@ -185,6 +191,7 @@ export const App: React.FC = () => {
         onToggleFunctionPanel={handleToggleFunctionPanel}
         onToggleTopView={handleToggleTopView}
         onToggleInfoPanel={handleToggleInfoPanel}
+        onToggleShadowSettings={handleToggleShadowSettings}
         showInfoPanel={showInfoPanel}
       />
       
@@ -201,8 +208,9 @@ export const App: React.FC = () => {
           <MobxResourceManager />
           <TopView visible={editorStore.showTopView} />
           <DebugPanel />
+          <ShadowSettings />
         </EditorProvider>
       )}
-    </>
+    </ThemeProvider>
   );
 }; 

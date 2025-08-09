@@ -40,6 +40,7 @@ export class EditorStore {
   showPropertyPanel: boolean = true;
   showResourceManager: boolean = true;
   showTopView: boolean = true;
+  showShadowSettings: boolean = false;
   
   // 编辑器实例引用
   private editor: EditorCore | null = null;
@@ -284,6 +285,13 @@ export class EditorStore {
   setTopViewVisible(visible: boolean) {
     runInAction(() => {
       this.showTopView = visible;
+    });
+  }
+
+  // 切换阴影设置显示
+  toggleShadowSettings() {
+    runInAction(() => {
+      this.showShadowSettings = !this.showShadowSettings;
     });
   }
 

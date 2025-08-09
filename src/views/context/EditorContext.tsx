@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import { createContext, useContext, useCallback, useEffect, useState, type ReactNode, type FC } from 'react';
 
 import { EditorCore } from '../../core/EditorCore';
 import { EditorState, EditorAction } from '../../models/EditorState';
@@ -13,12 +13,12 @@ export interface EditorContextValue {
 const EditorContext = createContext<EditorContextValue | null>(null);
 
 export interface EditorProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
   canvas?: HTMLCanvasElement;
   editor?: EditorCore;
 }
 
-export const EditorProvider: React.FC<EditorProviderProps> = ({
+export const EditorProvider: FC<EditorProviderProps> = ({
   children,
   canvas,
   editor: externalEditor,

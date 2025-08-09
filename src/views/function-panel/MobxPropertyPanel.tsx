@@ -1,9 +1,9 @@
-import React from 'react';
 import { observer } from 'mobx-react-lite';
-import { Card, Form, Input, InputNumber, Checkbox, Collapse, Empty, Button, Space, Tooltip, ColorPicker } from 'antd';
+import { Card, Form, Input, InputNumber, Checkbox, Collapse, Empty, Button, Space, Tooltip, ColorPicker, ConfigProvider } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import { CloseOutlined } from '@ant-design/icons';
 import { editorStore, ModelData } from '../../stores/EditorStore';
+import { themeStore } from '../../stores/ThemeStore';
 
 const { Panel } = Collapse;
 
@@ -117,8 +117,9 @@ const ModelPropertyEditor: React.FC<PropertyEditorProps> = observer(({ model }) 
   );
 });
 
-export const MobxPropertyPanel: React.FC = observer(() => {
+export const MobxPropertyPanel = observer(() => {
   const { showPropertyPanel, selectedModels } = editorStore;
+  const theme = themeStore.currentTheme;
 
   const handleClose = () => {
     editorStore.togglePropertyPanel();
@@ -131,7 +132,20 @@ export const MobxPropertyPanel: React.FC = observer(() => {
   const title = selectedModels.length === 1 ? `属性 - ${selectedModels[0].name}` : `已选择 ${selectedModels.length} 个对象`;
 
   return (
-    <Card
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: theme.colors.primary,
+          colorBgContainer: theme.colors.background,
+          colorBgElevated: theme.colors.surface,
+          colorText: theme.colors.text,
+          colorTextSecondary: theme.colors.textSecondary,
+          colorBorder: theme.colors.border,
+          borderRadius: 8,
+        },
+      }}
+    >
+      <Card
       title={title}
       extra={<Tooltip title="关闭"><Button type="text" icon={<CloseOutlined />} onClick={handleClose} /></Tooltip>}
       style={{
@@ -142,14 +156,17 @@ export const MobxPropertyPanel: React.FC = observer(() => {
         maxHeight: '80vh',
         backdropFilter: 'blur(10px)',
         zIndex: 1000,
-        backgroundColor: 'rgba(45, 45, 55, 0.9)',
+        backgroundColor: theme.colors.background,
         display: 'flex',
         flexDirection: 'column',
+        border: `1px solid ${theme.colors.border}`,
+        boxShadow: theme.shadows.lg,
       }}
       headStyle={{
-        color: '#e0e0e0',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+        color: theme.colors.text,
+        borderBottom: `1px solid ${theme.colors.border}`,
         cursor: 'move',
+        backgroundColor: theme.colors.surfaceVariant,
       }}
       bodyStyle={{ padding: '0 16px', overflowY: 'auto', flex: 1 }}
       bordered={false}
@@ -160,5 +177,6 @@ export const MobxPropertyPanel: React.FC = observer(() => {
         <Empty description="未选择任何对象" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: '20px 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }} />
       )}
     </Card>
+    </ConfigProvider>
   );
 }); 

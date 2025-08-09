@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.10]
 ### Enhanced 
+- **UI:** 新增阴影设置功能，增加深色模式和浅色模式切换
+
+## [1.2.10]
+### Enhanced 
 - **UI:** 新增俯视图拖拉拽功能
 
 ## [1.2.9]

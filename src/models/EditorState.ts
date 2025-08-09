@@ -66,6 +66,15 @@ export interface EditorSettings {
   showAxes: boolean;
   showBoundingBoxes: boolean;
   
+  // 阴影设置
+  enableShadows: boolean;
+  shadowMapSize: number;
+  shadowMapType: 'Basic' | 'PCF' | 'PCFSoft' | 'VSM';
+  shadowCameraNear: number;
+  shadowCameraFar: number;
+  shadowRadius: number;
+  shadowBias: number;
+  
   // 性能设置
   maxSelectableObjects: number;
   enableAutoSave: boolean;
@@ -99,6 +108,13 @@ export const defaultEditorState: EditorState = {
     showGrid: true,
     showAxes: true,
     showBoundingBoxes: false,
+    enableShadows: false,
+    shadowMapSize: 1024,
+    shadowMapType: 'PCF',
+    shadowCameraNear: 0.1,
+    shadowCameraFar: 50,
+    shadowRadius: 1,
+    shadowBias: -0.0001,
     maxSelectableObjects: 1000,
     enableAutoSave: true,
     autoSaveInterval: 30000,

@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Card, Input, List, Button, Radio, Space, Tooltip, Typography, Tag, Divider } from 'antd';
+import { Card, Input, List, Button, Radio, Space, Tooltip, Typography, Tag, Divider, ConfigProvider } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined, CloseOutlined } from '@ant-design/icons';
 
 import { editorStore, ModelData } from '../../stores/EditorStore';
+import { themeStore } from '../../stores/ThemeStore';
 
 const { Text } = Typography;
 
@@ -18,9 +19,10 @@ const getModelIcon = (type: string) => {
     }
 };
 
-export const MobxResourceManager: React.FC = observer(() => {
+export const MobxResourceManager = observer(() => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const theme = themeStore.currentTheme;
 
   const { showResourceManager, modelList, selectedModelIds, selectionCount } = editorStore;
 
@@ -65,7 +67,20 @@ export const MobxResourceManager: React.FC = observer(() => {
   };
 
   return (
-    <Card
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: theme.colors.primary,
+          colorBgContainer: theme.colors.background,
+          colorBgElevated: theme.colors.surface,
+          colorText: theme.colors.text,
+          colorTextSecondary: theme.colors.textSecondary,
+          colorBorder: theme.colors.border,
+          borderRadius: 8,
+        },
+      }}
+    >
+      <Card
       title="资源管理器"
       extra={<Tooltip title="关闭"><Button type="text" icon={<CloseOutlined />} onClick={handleClose} /></Tooltip>}
       style={{
@@ -76,14 +91,17 @@ export const MobxResourceManager: React.FC = observer(() => {
         maxHeight: '60vh',
         backdropFilter: 'blur(10px)',
         zIndex: 1000,
-        backgroundColor: 'rgba(45, 45, 55, 0.9)',
+        backgroundColor: theme.colors.background,
         display: 'flex',
         flexDirection: 'column',
+        border: `1px solid ${theme.colors.border}`,
+        boxShadow: theme.shadows.lg,
       }}
       headStyle={{
-        color: '#e0e0e0',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+        color: theme.colors.text,
+        borderBottom: `1px solid ${theme.colors.border}`,
         cursor: 'move',
+        backgroundColor: theme.colors.surfaceVariant,
       }}
       bodyStyle={{ padding: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       bordered={false}
@@ -147,10 +165,11 @@ export const MobxResourceManager: React.FC = observer(() => {
           </List.Item>
         )}
       />
-      <Divider style={{ margin: '8px 0', borderColor: 'rgba(255, 255, 255, 0.2)' }} />
-      <div style={{ textAlign: 'center', fontSize: 11, color: '#aaa' }}>
+      <Divider style={{ margin: '8px 0', borderColor: theme.colors.border }} />
+      <div style={{ textAlign: 'center', fontSize: 11, color: theme.colors.textTertiary }}>
         <Text type="secondary">总数: {stats.total} | 可见: {stats.visible} | 已选: {stats.selected}</Text>
       </div>
     </Card>
+    </ConfigProvider>
   );
 }); 
