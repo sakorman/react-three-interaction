@@ -27,7 +27,7 @@ interface ToolbarProps {
   onToggleFunctionPanel: () => void;
   onToggleTopView: () => void;
   onToggleInfoPanel: () => void;
-  onToggleShadowSettings: () => void;
+  onToggleSettingsDropdown: () => void;
   showInfoPanel: boolean;
 }
 
@@ -42,7 +42,7 @@ export const Toolbar: React.FC<ToolbarProps> = observer(({
   onToggleFunctionPanel,
   onToggleTopView,
   onToggleInfoPanel,
-  onToggleShadowSettings,
+  onToggleSettingsDropdown,
   showInfoPanel,
 }) => {
   const theme = themeStore.currentTheme;
@@ -75,11 +75,13 @@ export const Toolbar: React.FC<ToolbarProps> = observer(({
         border: `1px solid ${theme.colors.border}`,
         boxShadow: theme.shadows.md,
       }}
-      bodyStyle={{
-        padding: '12px',
-        borderRadius: '8px',
+      styles={{
+        body: {
+          padding: '12px',
+          borderRadius: '8px',
+        }
       }}
-      bordered={false}
+      variant="borderless"
     >
       <Space>
         <Tooltip title="选择">
@@ -141,10 +143,10 @@ export const Toolbar: React.FC<ToolbarProps> = observer(({
           />
         </Tooltip>
 
-        <Tooltip title="阴影设置">
+        <Tooltip title="设置">
           <Button
-            onClick={onToggleShadowSettings}
-            icon={<BulbOutlined />}
+            onClick={onToggleSettingsDropdown}
+            icon={<SettingOutlined />}
           />
         </Tooltip>
 

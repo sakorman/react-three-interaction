@@ -11,6 +11,8 @@ import {
   TopView,
   DebugPanel,
   ShadowSettings,
+  LightingSettings,
+  SettingsDropdown,
   ThemeProvider,
   createBasicGeometry,
   createBasicMaterial,
@@ -172,8 +174,8 @@ export const App: React.FC = () => {
     setShowInfoPanel(prev => !prev);
   }, []);
 
-  const handleToggleShadowSettings = useCallback(() => {
-    editorStore.toggleShadowSettings();
+  const handleToggleSettingsDropdown = useCallback(() => {
+    editorStore.toggleSettingsDropdown();
   }, []);
 
   return (
@@ -191,9 +193,11 @@ export const App: React.FC = () => {
         onToggleFunctionPanel={handleToggleFunctionPanel}
         onToggleTopView={handleToggleTopView}
         onToggleInfoPanel={handleToggleInfoPanel}
-        onToggleShadowSettings={handleToggleShadowSettings}
+        onToggleSettingsDropdown={handleToggleSettingsDropdown}
         showInfoPanel={showInfoPanel}
       />
+      
+      <SettingsDropdown />
       
       <InfoPanel 
         activeTool={activeTool} 
@@ -209,6 +213,7 @@ export const App: React.FC = () => {
           <TopView visible={editorStore.showTopView} />
           <DebugPanel />
           <ShadowSettings />
+          <LightingSettings />
         </EditorProvider>
       )}
     </ThemeProvider>

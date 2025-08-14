@@ -348,7 +348,7 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ className }) => {
       <Dropdown
         open={visible}
         onOpenChange={setVisible}
-        dropdownRender={dropdownRender}
+        popupRender={dropdownRender}
         trigger={[]}
         placement="bottomLeft"
         getPopupContainer={() => document.body}

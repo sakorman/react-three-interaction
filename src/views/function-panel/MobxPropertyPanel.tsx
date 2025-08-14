@@ -5,7 +5,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { editorStore, ModelData } from '../../stores/EditorStore';
 import { themeStore } from '../../stores/ThemeStore';
 
-const { Panel } = Collapse;
+
 
 interface PropertyEditorProps {
   model: ModelData;
@@ -72,47 +72,63 @@ const ModelPropertyEditor: React.FC<PropertyEditorProps> = observer(({ model }) 
       initialValues={initialValues}
       key={model.id}
     >
-      <Collapse defaultActiveKey={['1', '2']} ghost>
-        <Panel header="基本信息" key="1">
-            <Form.Item label="名称" name="name">
-                <Input />
-            </Form.Item>
-            <Form.Item label="类型">
-                <Input value={model.type} disabled />
-            </Form.Item>
-            <Space align="center" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Form.Item name="visible" valuePropName="checked" noStyle>
-                    <Checkbox>显示</Checkbox>
+      <Collapse 
+        defaultActiveKey={['1', '2']} 
+        ghost
+        items={[
+          {
+            key: '1',
+            label: '基本信息',
+            children: (
+              <>
+                <Form.Item label="名称" name="name">
+                    <Input />
                 </Form.Item>
-                <Form.Item label="颜色" name="color" style={{ marginBottom: 0 }}>
-                    <ColorPicker />
+                <Form.Item label="类型">
+                    <Input value={model.type} disabled />
                 </Form.Item>
-            </Space>
-        </Panel>
-        <Panel header="变换" key="2">
-          <Form.Item label="位置 (X, Y, Z)">
-            <Space>
-              <Form.Item name="positionX" noStyle><InputNumber step={0.1} /></Form.Item>
-              <Form.Item name="positionY" noStyle><InputNumber step={0.1} /></Form.Item>
-              <Form.Item name="positionZ" noStyle><InputNumber step={0.1} /></Form.Item>
-            </Space>
-          </Form.Item>
-          <Form.Item label="旋转 (X, Y, Z) 度">
-            <Space>
-              <Form.Item name="rotationX" noStyle><InputNumber step={1} /></Form.Item>
-              <Form.Item name="rotationY" noStyle><InputNumber step={1} /></Form.Item>
-              <Form.Item name="rotationZ" noStyle><InputNumber step={1} /></Form.Item>
-            </Space>
-          </Form.Item>
-          <Form.Item label="缩放 (X, Y, Z)">
-            <Space>
-              <Form.Item name="scaleX" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
-              <Form.Item name="scaleY" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
-              <Form.Item name="scaleZ" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
-            </Space>
-          </Form.Item>
-        </Panel>
-      </Collapse>
+                <Space align="center" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Form.Item name="visible" valuePropName="checked" noStyle>
+                        <Checkbox>显示</Checkbox>
+                    </Form.Item>
+                    <Form.Item label="颜色" name="color" style={{ marginBottom: 0 }}>
+                        <ColorPicker />
+                    </Form.Item>
+                </Space>
+              </>
+            )
+          },
+          {
+            key: '2',
+            label: '变换',
+            children: (
+              <>
+                <Form.Item label="位置 (X, Y, Z)">
+                  <Space>
+                    <Form.Item name="positionX" noStyle><InputNumber step={0.1} /></Form.Item>
+                    <Form.Item name="positionY" noStyle><InputNumber step={0.1} /></Form.Item>
+                    <Form.Item name="positionZ" noStyle><InputNumber step={0.1} /></Form.Item>
+                  </Space>
+                </Form.Item>
+                <Form.Item label="旋转 (X, Y, Z) 度">
+                  <Space>
+                    <Form.Item name="rotationX" noStyle><InputNumber step={1} /></Form.Item>
+                    <Form.Item name="rotationY" noStyle><InputNumber step={1} /></Form.Item>
+                    <Form.Item name="rotationZ" noStyle><InputNumber step={1} /></Form.Item>
+                  </Space>
+                </Form.Item>
+                <Form.Item label="缩放 (X, Y, Z)">
+                  <Space>
+                    <Form.Item name="scaleX" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
+                    <Form.Item name="scaleY" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
+                    <Form.Item name="scaleZ" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
+                  </Space>
+                </Form.Item>
+              </>
+            )
+          }
+        ]}
+      />
     </Form>
   );
 });
@@ -162,14 +178,20 @@ export const MobxPropertyPanel = observer(() => {
         border: `1px solid ${theme.colors.border}`,
         boxShadow: theme.shadows.lg,
       }}
-      headStyle={{
-        color: theme.colors.text,
-        borderBottom: `1px solid ${theme.colors.border}`,
-        cursor: 'move',
-        backgroundColor: theme.colors.surfaceVariant,
+      styles={{
+        header: {
+          color: theme.colors.text,
+          borderBottom: `1px solid ${theme.colors.border}`,
+          cursor: 'move',
+          backgroundColor: theme.colors.surfaceVariant,
+        },
+        body: { 
+          padding: '0 16px', 
+          overflowY: 'auto', 
+          flex: 1 
+        }
       }}
-      bodyStyle={{ padding: '0 16px', overflowY: 'auto', flex: 1 }}
-      bordered={false}
+      variant="borderless"
     >
       {selectedModels.length > 0 ? (
         selectedModels.map(model => <ModelPropertyEditor key={model.id} model={model} />)

@@ -75,6 +75,25 @@ export interface EditorSettings {
   shadowRadius: number;
   shadowBias: number;
   
+  // 光照设置
+  ambientLightIntensity: number;
+  ambientLightColor: string;
+  directionalLightIntensity: number;
+  directionalLightColor: string;
+  directionalLightPosition: { x: number; y: number; z: number };
+  enableDirectionalLight: boolean;
+  pointLightIntensity: number;
+  pointLightColor: string;
+  pointLightPosition: { x: number; y: number; z: number };
+  enablePointLight: boolean;
+  spotLightIntensity: number;
+  spotLightColor: string;
+  spotLightPosition: { x: number; y: number; z: number };
+  spotLightTarget: { x: number; y: number; z: number };
+  spotLightAngle: number;
+  spotLightPenumbra: number;
+  enableSpotLight: boolean;
+  
   // 性能设置
   maxSelectableObjects: number;
   enableAutoSave: boolean;
@@ -115,6 +134,24 @@ export const defaultEditorState: EditorState = {
     shadowCameraFar: 50,
     shadowRadius: 1,
     shadowBias: -0.0001,
+    // 光照设置默认值
+    ambientLightIntensity: 0.6,
+    ambientLightColor: '#ffffff',
+    directionalLightIntensity: 1.0,
+    directionalLightColor: '#ffffff',
+    directionalLightPosition: { x: 5, y: 5, z: 5 },
+    enableDirectionalLight: true,
+    pointLightIntensity: 1.0,
+    pointLightColor: '#ffffff',
+    pointLightPosition: { x: 0, y: 5, z: 0 },
+    enablePointLight: false,
+    spotLightIntensity: 1.0,
+    spotLightColor: '#ffffff',
+    spotLightPosition: { x: 0, y: 10, z: 0 },
+    spotLightTarget: { x: 0, y: 0, z: 0 },
+    spotLightAngle: Math.PI / 4,
+    spotLightPenumbra: 0.1,
+    enableSpotLight: false,
     maxSelectableObjects: 1000,
     enableAutoSave: true,
     autoSaveInterval: 30000,

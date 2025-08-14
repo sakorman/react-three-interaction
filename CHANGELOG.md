@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.10]
+## [1.2.11]
 ### Enhanced 
 - **UI:** 新增阴影设置功能，增加深色模式和浅色模式切换
 

@@ -41,6 +41,8 @@ export class EditorStore {
   showResourceManager: boolean = true;
   showTopView: boolean = true;
   showShadowSettings: boolean = false;
+  showLightingSettings: boolean = false;
+  showSettingsDropdown: boolean = false;
   
   // 编辑器实例引用
   private editor: EditorCore | null = null;
@@ -292,6 +294,22 @@ export class EditorStore {
   toggleShadowSettings() {
     runInAction(() => {
       this.showShadowSettings = !this.showShadowSettings;
+      this.showSettingsDropdown = false; // 关闭设置下拉菜单
+    });
+  }
+
+  // 切换光照设置显示
+  toggleLightingSettings() {
+    runInAction(() => {
+      this.showLightingSettings = !this.showLightingSettings;
+      this.showSettingsDropdown = false; // 关闭设置下拉菜单
+    });
+  }
+
+  // 切换设置下拉菜单显示
+  toggleSettingsDropdown() {
+    runInAction(() => {
+      this.showSettingsDropdown = !this.showSettingsDropdown;
     });
   }
 

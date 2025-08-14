@@ -34,6 +34,8 @@ export { MobxResourceManager } from './views/resource-manager';
 export { TopView } from './views/top-view';
 export { DebugPanel } from './views/debug/DebugPanel';
 export { ShadowSettings } from './views/shadow-settings';
+export { LightingSettings } from './views/lighting-settings';
+export { SettingsDropdown } from './views/settings-dropdown';
 export { ThemeProvider } from './views/theme-provider';
 
 // MobX Store

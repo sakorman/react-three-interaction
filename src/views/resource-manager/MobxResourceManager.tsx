@@ -97,14 +97,21 @@ export const MobxResourceManager = observer(() => {
         border: `1px solid ${theme.colors.border}`,
         boxShadow: theme.shadows.lg,
       }}
-      headStyle={{
-        color: theme.colors.text,
-        borderBottom: `1px solid ${theme.colors.border}`,
-        cursor: 'move',
-        backgroundColor: theme.colors.surfaceVariant,
+      styles={{
+        header: {
+          color: theme.colors.text,
+          borderBottom: `1px solid ${theme.colors.border}`,
+          cursor: 'move',
+          backgroundColor: theme.colors.surfaceVariant,
+        },
+        body: { 
+          padding: '12px', 
+          overflow: 'hidden', 
+          display: 'flex', 
+          flexDirection: 'column' 
+        }
       }}
-      bodyStyle={{ padding: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-      bordered={false}
+      variant="borderless"
     >
       <Space direction="vertical" style={{ marginBottom: 12 }}>
         <Input.Search 

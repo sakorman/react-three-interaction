@@ -44,6 +44,12 @@ export class EditorCore {
   // 相机控制器管理
   private cameraControls: any = null; // 用于存储 OrbitControls 或其他控制器
 
+  // 光照管理
+  private ambientLight?: THREE.AmbientLight;
+  private directionalLight?: THREE.DirectionalLight;
+  private pointLight?: THREE.PointLight;
+  private spotLight?: THREE.SpotLight;
+
   constructor(canvas: HTMLCanvasElement, options: EditorCoreOptions = {}) {
     this.canvas = canvas;
     this.options = {
@@ -312,6 +318,8 @@ export class EditorCore {
         set({ settings: newSettings });
         // 应用阴影设置更新
         this.applyShadowSettings(newSettings);
+        // 应用光照设置更新
+        this.applyLightingSettings(newSettings);
         break;
 
       case 'ADD_HISTORY_SNAPSHOT':
@@ -368,20 +376,11 @@ export class EditorCore {
     this.camera.position.set(5, 5, 5);
     this.camera.lookAt(0, 0, 0);
 
-    // 添加基础灯光
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-    this.scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 5, 5);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 1024;
-    directionalLight.shadow.mapSize.height = 1024;
-    directionalLight.shadow.camera.near = 0.1;
-    directionalLight.shadow.camera.far = 50;
-    directionalLight.shadow.radius = 1;
-    directionalLight.shadow.bias = -0.0001;
-    this.scene.add(directionalLight);
+    // 初始化光照系统
+    this.initializeLights();
+    
+    // 应用默认光照设置
+    this.applyLightingSettings(this.store.getState().settings);
 
     // 添加事件监听器
     this.addEventListeners();
@@ -630,6 +629,93 @@ export class EditorCore {
           object.receiveShadow = true;
         }
       });
+    }
+  }
+
+  // 初始化光照系统
+  private initializeLights(): void {
+    // 创建环境光
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    this.scene.add(this.ambientLight);
+
+    // 创建平行光
+    this.directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    this.directionalLight.position.set(5, 5, 5);
+    this.directionalLight.castShadow = true;
+    this.directionalLight.shadow.mapSize.width = 1024;
+    this.directionalLight.shadow.mapSize.height = 1024;
+    this.directionalLight.shadow.camera.near = 0.1;
+    this.directionalLight.shadow.camera.far = 50;
+    this.directionalLight.shadow.radius = 1;
+    this.directionalLight.shadow.bias = -0.0001;
+    this.scene.add(this.directionalLight);
+
+    // 创建点光源（默认不启用）
+    this.pointLight = new THREE.PointLight(0xffffff, 1.0, 100);
+    this.pointLight.position.set(0, 5, 0);
+    this.pointLight.visible = false;
+    this.scene.add(this.pointLight);
+
+    // 创建聚光灯（默认不启用）
+    this.spotLight = new THREE.SpotLight(0xffffff, 1.0, 100, Math.PI / 4, 0.1);
+    this.spotLight.position.set(0, 10, 0);
+    this.spotLight.target.position.set(0, 0, 0);
+    this.spotLight.visible = false;
+    this.scene.add(this.spotLight);
+    this.scene.add(this.spotLight.target);
+  }
+
+  // 应用光照设置
+  private applyLightingSettings(settings: any): void {
+    if (!this.ambientLight || !this.directionalLight || !this.pointLight || !this.spotLight) {
+      return;
+    }
+
+    // 更新环境光
+    this.ambientLight.intensity = settings.ambientLightIntensity;
+    this.ambientLight.color.setHex(parseInt(settings.ambientLightColor.replace('#', ''), 16));
+
+    // 更新平行光
+    this.directionalLight.visible = settings.enableDirectionalLight;
+    if (settings.enableDirectionalLight) {
+      this.directionalLight.intensity = settings.directionalLightIntensity;
+      this.directionalLight.color.setHex(parseInt(settings.directionalLightColor.replace('#', ''), 16));
+      this.directionalLight.position.set(
+        settings.directionalLightPosition.x,
+        settings.directionalLightPosition.y,
+        settings.directionalLightPosition.z
+      );
+    }
+
+    // 更新点光源
+    this.pointLight.visible = settings.enablePointLight;
+    if (settings.enablePointLight) {
+      this.pointLight.intensity = settings.pointLightIntensity;
+      this.pointLight.color.setHex(parseInt(settings.pointLightColor.replace('#', ''), 16));
+      this.pointLight.position.set(
+        settings.pointLightPosition.x,
+        settings.pointLightPosition.y,
+        settings.pointLightPosition.z
+      );
+    }
+
+    // 更新聚光灯
+    this.spotLight.visible = settings.enableSpotLight;
+    if (settings.enableSpotLight) {
+      this.spotLight.intensity = settings.spotLightIntensity;
+      this.spotLight.color.setHex(parseInt(settings.spotLightColor.replace('#', ''), 16));
+      this.spotLight.position.set(
+        settings.spotLightPosition.x,
+        settings.spotLightPosition.y,
+        settings.spotLightPosition.z
+      );
+      this.spotLight.target.position.set(
+        settings.spotLightTarget.x,
+        settings.spotLightTarget.y,
+        settings.spotLightTarget.z
+      );
+      this.spotLight.angle = settings.spotLightAngle;
+      this.spotLight.penumbra = settings.spotLightPenumbra;
     }
   }
 
