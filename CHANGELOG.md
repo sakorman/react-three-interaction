@@ -2,33 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.13]
+### Enhanced 
+- **Features :** 右侧属性栏新增材质贴图上传功能，
+
 ## [1.2.12]
 ### Enhanced 
-- **UI:** 新增光照设置功能，抽出设置面板
+- **Features :** 新增光照设置功能，抽出设置面板
 
 ## [1.2.11]
 ### Enhanced 
-- **UI:** 新增阴影设置功能，增加深色模式和浅色模式切换
+- **Features :** 新增阴影设置功能，增加深色模式和浅色模式切换
 
 ## [1.2.10]
 ### Enhanced 
-- **UI:** 新增俯视图拖拉拽功能
+- **Features :** 新增俯视图拖拉拽功能
 
 ## [1.2.9]
 ### Enhanced 
-- **UI:** 修复俯视图拖拽功能失效问题
+- **Bugfix:** 修复俯视图拖拽功能失效问题
 
 ## [1.2.8]
 ### Fixed 
-- **UX:** 修改操作说明展示逻辑
+- **Features:** 修改操作说明展示逻辑
 
 ## [1.2.7]
 ### Enhanced 
-- **UI:** 创建了一个独立的俯视图窗口，提供实时渲染、多视角切换等功能
+- **Features:** 创建了一个独立的俯视图窗口，提供实时渲染、多视角切换等功能
 
 ## [1.2.6]
 ### Fixed
-- **UI:** 修复了拖拽失败的问题
+- **UI & Bugfix:** 修复了拖拽失败的问题
 
 ## [1.2.5]
 
@@ -38,7 +42,7 @@ All notable changes to this project will be documented in this file.
 ## [1.2.4]
 
 ### Enhanced
-- **UX:** 基于antDesign重构属性面板、选择菜单、资源管理器。
+- **UX & Features:** 基于antDesign重构属性面板、选择菜单、资源管理器。
 
 ## [1.2.3]
 
