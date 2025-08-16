@@ -1,7 +1,8 @@
 import { observer } from 'mobx-react-lite';
-import { Card, Form, Input, InputNumber, Checkbox, Collapse, Empty, Button, Space, Tooltip, ColorPicker, ConfigProvider } from 'antd';
+import { Card, Form, Input, InputNumber, Checkbox, Collapse, Empty, Button, Space, Tooltip, ColorPicker, ConfigProvider, Upload, Slider, Divider } from 'antd';
 import type { Color } from 'antd/es/color-picker';
-import { CloseOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd/es/upload/interface';
+import { CloseOutlined, UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { editorStore, ModelData } from '../../stores/EditorStore';
 import { themeStore } from '../../stores/ThemeStore';
 
@@ -13,6 +14,18 @@ interface PropertyEditorProps {
 
 const ModelPropertyEditor: React.FC<PropertyEditorProps> = observer(({ model }) => {
   const [form] = Form.useForm();
+  
+  // 确保材质对象有默认值
+  const ensureMaterial = (updates: any) => ({
+    type: 'standard' as const,
+    color: '#ffffff',
+    metalness: 0,
+    roughness: 1,
+    opacity: 1,
+    transparent: false,
+    ...model.material,
+    ...updates
+  });
 
   const handleValuesChange = (changedValues: any, _allValues: any) => {
     const key = Object.keys(changedValues)[0];
@@ -73,7 +86,7 @@ const ModelPropertyEditor: React.FC<PropertyEditorProps> = observer(({ model }) 
       key={model.id}
     >
       <Collapse 
-        defaultActiveKey={['1', '2']} 
+        defaultActiveKey={['1', '2', '3']} 
         ghost
         items={[
           {
@@ -122,6 +135,248 @@ const ModelPropertyEditor: React.FC<PropertyEditorProps> = observer(({ model }) 
                     <Form.Item name="scaleX" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
                     <Form.Item name="scaleY" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
                     <Form.Item name="scaleZ" noStyle><InputNumber step={0.1} min={0.01} /></Form.Item>
+                  </Space>
+                </Form.Item>
+              </>
+            )
+          },
+          {
+            key: '3',
+            label: '材质',
+            children: (
+              <>
+                <Form.Item label="材质类型">
+                  <Input value={model.material?.type || 'standard'} disabled />
+                </Form.Item>
+                
+                <Form.Item label="金属度">
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={model.material?.metalness || 0}
+                    onChange={(value) => {
+                      editorStore.updateModel(model.id, {
+                        material: ensureMaterial({ metalness: value })
+                      });
+                    }}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="粗糙度">
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={model.material?.roughness || 1}
+                    onChange={(value) => {
+                      editorStore.updateModel(model.id, {
+                        material: ensureMaterial({ roughness: value })
+                      });
+                    }}
+                  />
+                </Form.Item>
+                
+                <Form.Item label="透明度">
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={model.material?.opacity || 1}
+                    onChange={(value) => {
+                      editorStore.updateModel(model.id, {
+                        material: ensureMaterial({ 
+                          opacity: value,
+                          transparent: value < 1
+                        })
+                      });
+                    }}
+                  />
+                </Form.Item>
+                
+                <Divider orientation="left" plain>贴图</Divider>
+                
+                <Form.Item label="主贴图 (Diffuse/Albedo)">
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Upload
+                      accept="image/*"
+                      showUploadList={false}
+                      beforeUpload={(file: UploadFile) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const dataUrl = e.target?.result as string;
+                          editorStore.updateModel(model.id, {
+                            material: ensureMaterial({ map: dataUrl })
+                          });
+                        };
+                        reader.readAsDataURL(file as any);
+                        return false;
+                      }}
+                    >
+                      <Button icon={<UploadOutlined />} size="small">
+                        选择图片
+                      </Button>
+                    </Upload>
+                    {model.material?.map && (
+                      <Space>
+                        <img 
+                          src={model.material.map} 
+                          alt="主贴图" 
+                          style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #ddd' }}
+                        />
+                        <Button 
+                          icon={<DeleteOutlined />} 
+                          size="small" 
+                          type="text" 
+                          danger
+                          onClick={() => {
+                            editorStore.updateModel(model.id, {
+                              material: ensureMaterial({ map: undefined })
+                            });
+                          }}
+                        >
+                          移除
+                        </Button>
+                      </Space>
+                    )}
+                  </Space>
+                </Form.Item>
+                
+                <Form.Item label="法线贴图 (Normal Map)">
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Upload
+                      accept="image/*"
+                      showUploadList={false}
+                      beforeUpload={(file: UploadFile) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const dataUrl = e.target?.result as string;
+                          editorStore.updateModel(model.id, {
+                            material: ensureMaterial({ normalMap: dataUrl })
+                          });
+                        };
+                        reader.readAsDataURL(file as any);
+                        return false;
+                      }}
+                    >
+                      <Button icon={<UploadOutlined />} size="small">
+                        选择图片
+                      </Button>
+                    </Upload>
+                    {model.material?.normalMap && (
+                      <Space>
+                        <img 
+                          src={model.material.normalMap} 
+                          alt="法线贴图" 
+                          style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #ddd' }}
+                        />
+                        <Button 
+                          icon={<DeleteOutlined />} 
+                          size="small" 
+                          type="text" 
+                          danger
+                          onClick={() => {
+                            editorStore.updateModel(model.id, {
+                              material: ensureMaterial({ normalMap: undefined })
+                            });
+                          }}
+                        >
+                          移除
+                        </Button>
+                      </Space>
+                    )}
+                  </Space>
+                </Form.Item>
+                
+                <Form.Item label="粗糙度贴图 (Roughness Map)">
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Upload
+                      accept="image/*"
+                      showUploadList={false}
+                      beforeUpload={(file: UploadFile) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const dataUrl = e.target?.result as string;
+                          editorStore.updateModel(model.id, {
+                            material: ensureMaterial({ roughnessMap: dataUrl })
+                          });
+                        };
+                        reader.readAsDataURL(file as any);
+                        return false;
+                      }}
+                    >
+                      <Button icon={<UploadOutlined />} size="small">
+                        选择图片
+                      </Button>
+                    </Upload>
+                    {model.material?.roughnessMap && (
+                      <Space>
+                        <img 
+                          src={model.material.roughnessMap} 
+                          alt="粗糙度贴图" 
+                          style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #ddd' }}
+                        />
+                        <Button 
+                          icon={<DeleteOutlined />} 
+                          size="small" 
+                          type="text" 
+                          danger
+                          onClick={() => {
+                            editorStore.updateModel(model.id, {
+                              material: ensureMaterial({ roughnessMap: undefined })
+                            });
+                          }}
+                        >
+                          移除
+                        </Button>
+                      </Space>
+                    )}
+                  </Space>
+                </Form.Item>
+                
+                <Form.Item label="金属度贴图 (Metalness Map)">
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Upload
+                      accept="image/*"
+                      showUploadList={false}
+                      beforeUpload={(file: UploadFile) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          const dataUrl = e.target?.result as string;
+                          editorStore.updateModel(model.id, {
+                            material: ensureMaterial({ metalnessMap: dataUrl })
+                          });
+                        };
+                        reader.readAsDataURL(file as any);
+                        return false;
+                      }}
+                    >
+                      <Button icon={<UploadOutlined />} size="small">
+                        选择图片
+                      </Button>
+                    </Upload>
+                    {model.material?.metalnessMap && (
+                      <Space>
+                        <img 
+                          src={model.material.metalnessMap} 
+                          alt="金属度贴图" 
+                          style={{ width: 32, height: 32, objectFit: 'cover', border: '1px solid #ddd' }}
+                        />
+                        <Button 
+                          icon={<DeleteOutlined />} 
+                          size="small" 
+                          type="text" 
+                          danger
+                          onClick={() => {
+                            editorStore.updateModel(model.id, {
+                              material: ensureMaterial({ metalnessMap: undefined })
+                            });
+                          }}
+                        >
+                          移除
+                        </Button>
+                      </Space>
+                    )}
                   </Space>
                 </Form.Item>
               </>

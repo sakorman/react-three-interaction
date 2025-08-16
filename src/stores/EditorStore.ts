@@ -19,6 +19,10 @@ export interface ModelData {
     roughness?: number;
     opacity?: number;
     transparent?: boolean;
+    map?: string; // 主贴图 URL
+    normalMap?: string; // 法线贴图 URL
+    roughnessMap?: string; // 粗糙度贴图 URL
+    metalnessMap?: string; // 金属度贴图 URL
   };
   sceneObject?: SceneObject;
 }
@@ -195,6 +199,66 @@ export class EditorStore {
           if (updates.material.transparent !== undefined) {
             material.transparent = updates.material.transparent;
           }
+          
+          // 加载并应用贴图
+          const loader = new THREE.TextureLoader();
+          
+          if (updates.material.map !== undefined) {
+            if (updates.material.map) {
+              loader.load(updates.material.map, (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                material.map = texture;
+                material.needsUpdate = true;
+              });
+            } else {
+              material.map = null;
+              material.needsUpdate = true;
+            }
+          }
+          
+          if (updates.material.normalMap !== undefined) {
+            if (updates.material.normalMap) {
+              loader.load(updates.material.normalMap, (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                material.normalMap = texture;
+                material.needsUpdate = true;
+              });
+            } else {
+              material.normalMap = null;
+              material.needsUpdate = true;
+            }
+          }
+          
+          if (updates.material.roughnessMap !== undefined) {
+            if (updates.material.roughnessMap) {
+              loader.load(updates.material.roughnessMap, (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                material.roughnessMap = texture;
+                material.needsUpdate = true;
+              });
+            } else {
+              material.roughnessMap = null;
+              material.needsUpdate = true;
+            }
+          }
+          
+          if (updates.material.metalnessMap !== undefined) {
+            if (updates.material.metalnessMap) {
+              loader.load(updates.material.metalnessMap, (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                material.metalnessMap = texture;
+                material.needsUpdate = true;
+              });
+            } else {
+              material.metalnessMap = null;
+              material.needsUpdate = true;
+            }
+          }
+          
           material.needsUpdate = true;
         }
         
