@@ -11,7 +11,13 @@ export type EventType =
   | 'object:drag:end'
   | 'tool:change'
   | 'camera:change'
-  | 'scene:update';
+  | 'scene:update'
+  | 'physics:body:add'
+  | 'physics:body:remove'
+  | 'physics:step'
+  | 'trajectory:start'
+  | 'trajectory:update'
+  | 'trajectory:end';
 
 export interface EventData {
   'object:select': { objectIds: string[] };
@@ -27,6 +33,12 @@ export interface EventData {
   'tool:change': { oldTool: string; newTool: string };
   'camera:change': { position?: number[]; target?: number[]; zoom?: number };
   'scene:update': { timestamp: number };
+  'physics:body:add': { physicsBodyId: string; sceneObjectId: string };
+  'physics:body:remove': { physicsBodyId: string; sceneObjectId: string };
+  'physics:step': { deltaTime: number };
+  'trajectory:start': { trajectoryId: string; objectId: string };
+  'trajectory:update': { trajectoryId: string; progress: number };
+  'trajectory:end': { trajectoryId: string; objectId: string };
 }
 
 export type EventCallback<T extends EventType> = (data: EventData[T]) => void;

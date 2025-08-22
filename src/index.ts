@@ -2,6 +2,8 @@
 export { EditorCore } from './core/EditorCore';
 export { EventSystem } from './core/EventSystem';
 export { SceneManager } from './core/SceneManager';
+export { PhysicsManager } from './core/PhysicsManager';
+export { TrajectorySystem } from './core/TrajectorySystem';
 
 // 数据模型
 export { SceneObject } from './models/SceneObject';
@@ -37,6 +39,7 @@ export { ShadowSettings } from './views/shadow-settings';
 export { LightingSettings } from './views/lighting-settings';
 export { SettingsDropdown } from './views/settings-dropdown';
 export { ThemeProvider } from './views/theme-provider';
+export { TrajectoryPanel } from './views/trajectory-panel';
 
 // MobX Store
 export { EditorStore, editorStore } from './stores/EditorStore';
