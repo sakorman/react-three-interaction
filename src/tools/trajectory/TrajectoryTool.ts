@@ -34,21 +34,28 @@ export class TrajectoryTool extends BaseTool {
     this.trajectorySystem.start();
   }
 
+  /**
+   * 工具激活 - 设置交互监听和视觉反馈
+   * 职责：事件监听、预览系统、用户反馈
+   */
   public activate(): void {
     super.activate();
-    this.createPreviewLine();
+    this.createPreviewLine(); // 创建轨迹预览线条
     
-    // 监听对象选择事件
+    // 事件驱动的对象选择系统
+    // 监听用户的对象选择操作，更新工具状态
     this.getEventSystem().on('object:select', (data: { objectIds: string[] }) => {
       if (data.objectIds.length > 0) {
+        // 获取第一个选中的对象作为轨迹的目标
         this.selectedObject = this.getSceneManager().getObject(data.objectIds[0]);
-        this.updatePreview();
+        this.updatePreview(); // 更新轨迹预览
       }
     });
 
+    // 监听对象取消选择事件
     this.getEventSystem().on('object:deselect', () => {
       this.selectedObject = undefined;
-      this.hidePreview();
+      this.hidePreview(); // 隐藏预览，清理视觉状态
     });
   }
 
@@ -114,32 +121,44 @@ export class TrajectoryTool extends BaseTool {
     return trajectoryId;
   }
 
+  /**
+   * 创建圆形轨迹 - 对象沿圆形路径运动
+   * 应用场景：巡逻、装饰动画、行星轨道等
+   * 
+   * @param center 圆心位置
+   * @param radius 半径大小
+   * @param options 动画配置选项
+   * @returns 轨迹ID，用于后续控制
+   */
   public createCircularTrajectory(center: THREE.Vector3, radius: number, options: Partial<TrajectoryOptions> = {}): string | null {
     if (!this.selectedObject) return null;
 
+    // 默认配置：适合循环动画的设置
     const trajectoryOptions: TrajectoryOptions = {
-      duration: 4,
-      easing: 'linear',
-      loop: true,
-      ...options,
+      duration: 4,        // 4秒完成一圈，速度适中
+      easing: 'linear',   // 匀速运动，符合圆周运动特性
+      loop: true,         // 循环播放，持续运动
+      ...options,         // 用户自定义配置覆盖默认值
     };
 
+    // 圆形轨迹参数：完整的 360° 圆形路径
     const params = {
-      center,
-      radius,
-      startAngle: 0,
-      endAngle: Math.PI * 2,
-      clockwise: true,
+      center,                    // 圆心坐标
+      radius,                    // 半径大小
+      startAngle: 0,             // 起始角度：0 弧度（3点钟方向）
+      endAngle: Math.PI * 2,     // 结束角度：2π 弧度（完整圆形）
+      clockwise: true,           // 顺时针方向
     };
 
+    // 轨迹生命周期：创建 → 启动 → 运行
     const trajectoryId = this.trajectorySystem.createTrajectory(
-      this.selectedObject,
-      'circular',
-      params,
-      trajectoryOptions
+      this.selectedObject,  // 目标对象
+      'circular',          // 轨迹类型
+      params,              // 轨迹参数
+      trajectoryOptions    // 动画选项
     );
 
-    this.trajectorySystem.startTrajectory(trajectoryId);
+    this.trajectorySystem.startTrajectory(trajectoryId); // 立即启动
     return trajectoryId;
   }
 
@@ -258,13 +277,22 @@ export class TrajectoryTool extends BaseTool {
     });
   }
 
+  /**
+   * 工具更新循环 - 每帧调用
+   * 职责：同步场景状态、驱动轨迹系统
+   * 
+   * @param _deltaTime 时间间隔（未使用，轨迹系统内部管理时间）
+   */
   public update(_deltaTime: number): void {
-    // 更新轨迹系统
+    // 场景对象映射构建：为轨迹系统提供最新的对象状态
+    // 这种设计允许轨迹系统独立于场景管理器运行
     const sceneObjects = new Map();
     this.getSceneManager().getAllObjects().forEach((obj: SceneObject) => {
-      sceneObjects.set(obj.id, obj);
+      sceneObjects.set(obj.id, obj); // ID → SceneObject 映射
     });
     
+    // 驱动轨迹系统：传入当前帧的所有对象状态
+    // 轨迹系统会计算每个活跃轨迹的新位置并更新对象
     this.trajectorySystem.update(sceneObjects);
   }
 
