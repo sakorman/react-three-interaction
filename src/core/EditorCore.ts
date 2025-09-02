@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-import { EditorState, EditorAction, EditorTool, defaultEditorState } from '../models/EditorState';
+import { EditorState, EditorAction, EditorTool, EditorSnapshot, EditorSettings, defaultEditorState } from '../models/EditorState';
 import { SceneObject } from '../models/SceneObject';
 import { EventSystem } from './EventSystem';
 import { SceneManager } from './SceneManager';
@@ -32,7 +33,7 @@ export class EditorCore {
   private activeTool?: BaseTool;
   
   // 状态管理
-  private store: any; // Zustand store
+  private store: any; // Zustand store - 复杂的泛型类型，保持 any 以避免类型复杂性
   private isInitialized = false;
   private animationFrameId?: number;
 
@@ -42,7 +43,7 @@ export class EditorCore {
   private dragStartMouse = new THREE.Vector2();
 
   // 相机控制器管理
-  private cameraControls: any = null; // 用于存储 OrbitControls 或其他控制器
+  private cameraControls: OrbitControls | null = null; // 用于存储 OrbitControls 或其他控制器
 
   // 光照管理
   private ambientLight?: THREE.AmbientLight;
@@ -215,7 +216,7 @@ export class EditorCore {
 
   private handleAction(
     action: EditorAction,
-    set: any,
+    set: any, // Zustand setter function
     get: () => EditorState & { dispatch: (action: EditorAction) => void }
   ) {
     const state = get();
@@ -360,7 +361,7 @@ export class EditorCore {
     }
   }
 
-  private restoreSnapshot(_snapshot: any) {
+  private restoreSnapshot(_snapshot: EditorSnapshot) {
     // 这里实现历史记录恢复逻辑
   }
 
@@ -565,11 +566,11 @@ export class EditorCore {
   }
 
   // 相机控制器管理API
-  public setCameraControls(controls: any): void {
+  public setCameraControls(controls: OrbitControls): void {
     this.cameraControls = controls;
   }
 
-  public getCameraControls(): any {
+  public getCameraControls(): OrbitControls | null {
     return this.cameraControls;
   }
 
@@ -586,7 +587,7 @@ export class EditorCore {
   }
 
   // 应用阴影设置
-  private applyShadowSettings(settings: any): void {
+  private applyShadowSettings(settings: EditorSettings): void {
     // 配置渲染器阴影设置
     this.renderer.shadowMap.enabled = settings.enableShadows;
     
@@ -666,7 +667,7 @@ export class EditorCore {
   }
 
   // 应用光照设置
-  private applyLightingSettings(settings: any): void {
+  private applyLightingSettings(settings: EditorSettings): void {
     if (!this.ambientLight || !this.directionalLight || !this.pointLight || !this.spotLight) {
       return;
     }
