@@ -43,7 +43,16 @@ export interface EditorSnapshot {
   id: string;
   timestamp: number;
   description: string;
-  state: {
+  // 场景对象数据
+  sceneObjectData?: any;
+  // 相机数据
+  cameraData?: any;
+  // 设置数据
+  settingsData?: any;
+  // 选中对象IDs
+  selectedObjectIds?: string[];
+  // 兼容原有结构
+  state?: {
     sceneObjects: Array<{
       id: string;
       properties: any;
